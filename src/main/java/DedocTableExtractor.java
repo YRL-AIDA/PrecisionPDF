@@ -68,14 +68,12 @@ public class DedocTableExtractor {
             outputPath = outputFile.toPath();
 
             if (inputFile.isFile()) {
-                //System.out.println(inputFile.getName());
                 extract(inputFile.toPath());
             } else {
                 final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**.{pdf,PDF}");
                 try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(inputPath, "*.pdf")) {
                     for (Path file : directoryStream) {
                         if (matcher.matches(file.getFileName())) {
-                            //System.out.println(file.getFileName());
                             extract(file);
                         }
                     }
@@ -102,6 +100,14 @@ public class DedocTableExtractor {
         ExtractionManager em = new ExtractionManager(document);
         List<Table> tables = em.extract();
 
+        if (tables != null) {
+            for (Table table: tables) {
+                table.splitCells();
+                table.completeRows();
+                table.removeEmptyRows();
+            }
+        }
+
         Path debugDirPath = outputPath.resolve("debug");
         DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
                 .setChunkDirectoryName("Chunks")
@@ -120,7 +126,7 @@ public class DedocTableExtractor {
         //debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
         //debugDrawer.drawBeforeRecomposing();
 
-        //writeTables(document);
+        writeTables(document);
         printJSON(document);
     }
 
@@ -217,9 +223,6 @@ public class DedocTableExtractor {
                     continue;
                 tables.sort(Comparator.comparing(Table::getPageIndex).thenComparing(Table::getTop));
                 for (Table table: tables) {
-                    table.splitCells();
-                    table.completeRows();
-                    table.removeEmptyRows();
                     if (table.isContinued())
                         continue;
                     else {

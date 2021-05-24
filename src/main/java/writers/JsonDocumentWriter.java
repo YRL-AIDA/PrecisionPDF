@@ -4,6 +4,7 @@ import model.Document;
 import model.Page;
 import model.TextChunk;
 import model.table.Cell;
+import model.table.Row;
 import model.table.Table;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,26 +40,38 @@ public class JsonDocumentWriter {
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
         jsonPage.put("number", page.getIndex());
+        jsonPage.put("width", page.getWidth());
+        jsonPage.put("height", page.getHeight());
         for (TextChunk block: page.getOutsideBlocks()) {
             JSONObject jsonBlock = new JSONObject();
             jsonBlock.put("order", block.getId());
-            jsonBlock.put("xPos", block.getLeft());
-            jsonBlock.put("yPos", block.getTop());
+            jsonBlock.put("x_top_left", block.getLeft());
+            jsonBlock.put("y_top_left", block.getTop());
+            jsonBlock.put("width", block.getWidth());
+            jsonBlock.put("height", block.getHeight());
             jsonBlock.put("text", block.getText());
             jsonBlocks.put(jsonBlock);
         }
         jsonPage.put("blocks",jsonBlocks);
         for (Table table: page.getTables()) {
             JSONObject jsonTable = new JSONObject();
+            jsonTable.put("x_top_left", table.getLeft());
+            jsonTable.put("y_top_left", table.getTop());
+            jsonTable.put("width", table.getWidth());
+            jsonTable.put("height", table.getHeight());
             JSONArray jsonRows = new JSONArray();
-            JSONArray jsonRow = new JSONArray();
             for (int i = 0; i < table.getNumOfRows(); i++) {
-                for (Cell cell: table.getRow(i).getCells()){
+                JSONArray jsonRow = new JSONArray();
+                Row row = table.getRow(i);
+                for (Cell cell: row.getCells()){
                     jsonRow.put(cell.getText());
                 }
-                jsonRows.put(jsonRow);
+                if (!row.getCells().isEmpty()) {
+                    jsonRows.put(jsonRow);;
+                }
             }
-            jsonTables.put(jsonRows);
+            jsonTable.put("rows", jsonRows);
+            jsonTables.put(jsonTable);
         }
         jsonPage.put("tables",jsonTables);
         return jsonPage;
