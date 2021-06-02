@@ -50,6 +50,10 @@ public class JsonDocumentWriter {
             jsonBlock.put("width", block.getWidth());
             jsonBlock.put("height", block.getHeight());
             jsonBlock.put("text", block.getText());
+            jsonBlock.put("is_bold", block.getFont().isBold());
+            jsonBlock.put("is_italic", block.getFont().isItalic());
+            jsonBlock.put("is_normal", block.getFont().isNormal());
+            jsonBlock.put("font_name", block.getFont().getName());
             jsonBlocks.put(jsonBlock);
         }
         jsonPage.put("blocks",jsonBlocks);
