@@ -362,6 +362,7 @@ public class PDContentExtractor extends PDFTextStripper {
 
                     TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
                     word.setFont(wordFont);
+                    word.updateTextLine();
                     word.setColor(color);
                     word.setSpaceWidth(spaceWidth);
                     word.setStartOrder(order);

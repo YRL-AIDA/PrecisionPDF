@@ -12,7 +12,7 @@ public class TextChunk extends PDFRectangle {
     private int id;
     private Page page;
     private String text;
-    private PDFFont PDFFont;
+    private PDFFont font;
     private Color color;
     private float spaceWidth;
     private int startOrder; // The index of an original chunk in its PDF document
@@ -59,12 +59,12 @@ public class TextChunk extends PDFRectangle {
     }
 
     public PDFFont getFont() {
-        return PDFFont;
+        return font;
     }
 
     public void setFont(PDFFont PDFFont) {
         assert (null != PDFFont);
-        this.PDFFont = PDFFont;
+        this.font = PDFFont;
     }
 
     public Color getColor() {
@@ -125,6 +125,7 @@ public class TextChunk extends PDFRectangle {
     public void updateTextLine() {
         TextLine textLine = textLines.get(0);
         textLine.setText(text);
+        textLine.setFont(font);
         PDFRectangle bbox = new PDFRectangle(getLeft(), getTop(), getRight(), getBottom());
         textLine.setBbox(bbox);
     }
@@ -132,7 +133,8 @@ public class TextChunk extends PDFRectangle {
     private void initTextLine() {
         String text = getText();
         PDFRectangle bbox = new PDFRectangle(getLeft(), getTop(), getRight(), getBottom());
-        TextLine textLine = new TextLine(text, bbox);
+        PDFFont font = getFont();
+        TextLine textLine = new TextLine(text, bbox, font);
         textLines.add(textLine);
     }
 
@@ -140,8 +142,8 @@ public class TextChunk extends PDFRectangle {
         textLines.addAll(block.textLines);
     }
 
-    public Iterator<TextLine> getTextLines() {
-        return textLines.iterator();
+    public List<TextLine> getTextLines() {
+        return textLines;
     }
 
     public void addAllTextPositions(List<TextPosition> tp) {
@@ -155,9 +157,18 @@ public class TextChunk extends PDFRectangle {
     public class TextLine {
         private String text;
         private PDFRectangle bbox;
+        private PDFFont font;
 
         public String getText() {
             return text;
+        }
+
+        public PDFFont getFont() {
+            return this.font;
+        }
+
+        public void setFont(PDFFont font) {
+            this.font = font;
         }
 
         public void setText(String text) {
@@ -172,9 +183,10 @@ public class TextChunk extends PDFRectangle {
             this.bbox = bbox;
         }
 
-        private TextLine(String text, PDFRectangle bbox) {
+        private TextLine(String text, PDFRectangle bbox, PDFFont font) {
             setText(text);
             setBbox(bbox);
+            setFont(font);
         }
     }
 

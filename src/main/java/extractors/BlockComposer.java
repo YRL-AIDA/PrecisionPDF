@@ -201,6 +201,7 @@ public class BlockComposer {
         copy.setSpaceWidth(spaceWidth);
         copy.setStartOrder(startOrder);
         copy.setEndOrder(endOrder);
+        copy.updateTextLine();
 
         return copy;
     }
