@@ -237,6 +237,8 @@ public class PDContentExtractor extends PDFTextStripper {
 
     private PDFFont getFont(TextPosition textPosition) {
         PDFont pdFont = textPosition.getFont();
+        //float fontSize = textPosition.getFontSize();
+        float fontSize = textPosition.getFontSizeInPt();
         if (null == pdFont)
             return null;
 
@@ -245,9 +247,10 @@ public class PDContentExtractor extends PDFTextStripper {
             return null;
 
         PDFFont result = new PDFFont();
+        result.setFontSize(fontSize);
         result.setName(name);
         final boolean isBoldFontName = name.toLowerCase().contains("bold");
-
+        final boolean isItalicFontName = name.toLowerCase().contains("italic");
         PDFontDescriptor desc = pdFont.getFontDescriptor();
         boolean isForceBold = false;
         if (null != desc) {
@@ -256,9 +259,12 @@ public class PDContentExtractor extends PDFTextStripper {
             result.setHeight(height);
 
             boolean italic = desc.isItalic();
+
             if (italic) {
                 result.setItalic(true);
             } else if (name.toLowerCase().contains("oblique")) {
+                result.setItalic(true);
+            } else if (isItalicFontName) {
                 result.setItalic(true);
             } else {
                 result.setItalic(false);

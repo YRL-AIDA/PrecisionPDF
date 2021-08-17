@@ -123,8 +123,8 @@ public class DedocTableExtractor {
                 .setBorderedTableDirectoryName("BorderedTables")
                 .setBorderedTableFileNameSuffix("BORDERED");
 
-        //debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
-        //debugDrawer.drawBeforeRecomposing();
+        debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
+        debugDrawer.drawBeforeRecomposing();
 
         writeTables(document);
         printJSON(document);

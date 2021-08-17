@@ -5,6 +5,15 @@ public class PDFFont {
     private float height;
     private boolean bold;
     private boolean italic;
+    private float fontSize;
+
+    public void setFontSize(float fontSize) {
+        this.fontSize = fontSize;
+    }
+
+    public float getFontSize() {
+        return this.fontSize;
+    }
 
     public String getName() {
         return this.name;

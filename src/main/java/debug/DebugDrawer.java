@@ -207,7 +207,9 @@ public class DebugDrawer {
     private void drawBlock(PageDrawer drawer, TextChunk block) throws IOException {
         drawer.drawRectangle(block.getLeft(), block.getTop(), block.getRight(), block.getBottom());
         String s = String.valueOf(block.getStartOrder());
-        drawer.drawString(s, block.getLeft(), block.getTop());
+        String font_size = String.valueOf(block.getFont().getFontSize());
+        drawer.drawString(s, block.getRight(), block.getBottom());
+        drawer.drawString("fs: " + font_size, block.getLeft(), block.getTop());
     }
 
     private void drawRulings() throws IOException {
