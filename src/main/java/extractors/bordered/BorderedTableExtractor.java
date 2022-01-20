@@ -172,6 +172,8 @@ public final class BorderedTableExtractor extends AbstractTableExtractor {
 
             Collections.sort(horizontal, new RangeComporator());
             Collections.sort(vertical, new RangeComporator());
+            table.setHorizontal(horizontal);
+            table.setVertical(vertical);
 
             ArrayList<TextChunk> chunks = new ArrayList<>();
             Iterator<TextChunk> blocksIterator = page.getBlocks();

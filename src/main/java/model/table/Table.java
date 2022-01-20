@@ -1,5 +1,6 @@
 package model.table;
 
+import extractors.bordered.Range;
 import model.PDFRectangle;
 
 import java.util.ArrayList;
@@ -16,6 +17,26 @@ public class Table extends PDFRectangle {
     //private boolean bordered;  // true, if the table is extracted by bordered table extractor
     private boolean continued; // true, if the table was used to create a combined table
     private TableType type;
+
+    public ArrayList<Range> getHorizontal() {
+        return horizontal;
+    }
+
+    public void setHorizontal(ArrayList<Range> horizontal) {
+        this.horizontal = horizontal;
+    }
+
+    private ArrayList<Range> horizontal = new ArrayList<>();
+
+    public ArrayList<Range> getVertical() {
+        return vertical;
+    }
+
+    public void setVertical(ArrayList<Range> vertical) {
+        this.vertical = vertical;
+    }
+
+    private ArrayList<Range> vertical = new ArrayList<>();
 
     {
         rows = new ArrayList();

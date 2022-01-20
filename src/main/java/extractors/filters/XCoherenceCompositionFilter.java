@@ -10,7 +10,7 @@ public class XCoherenceCompositionFilter implements BlockCompositionFilter {
     private static final int maxLeftCoherence;
 
     static {
-        DEFAULT_MAX_SPACE_DISTANCE_FACTOR = 1.2f;
+        DEFAULT_MAX_SPACE_DISTANCE_FACTOR = 1.5f;
         DEFAULT_MAX_LEFT_COHERENCE = 2;
         // TODO: Read settings from properties
         maxSpaceDistanceFactor = DEFAULT_MAX_SPACE_DISTANCE_FACTOR;

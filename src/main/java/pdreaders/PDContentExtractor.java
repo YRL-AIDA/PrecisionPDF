@@ -425,10 +425,10 @@ public class PDContentExtractor extends PDFTextStripper {
             return;
         }
 
-        String s = string.replaceAll("\\P{Print}", "");
-        if (s.isEmpty()) {
-            return;
-        }
+        //String s = string.replaceAll("\\P{Print}", "");
+        //if (s.isEmpty()) {
+        //    return;
+        //}
 
         // Line processing
         if (!newLineStarted) {

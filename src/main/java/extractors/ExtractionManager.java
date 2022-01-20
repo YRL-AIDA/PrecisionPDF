@@ -9,6 +9,8 @@ import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 public final class ExtractionManager {

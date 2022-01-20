@@ -99,7 +99,6 @@ public class DedocTableExtractor {
 
         ExtractionManager em = new ExtractionManager(document);
         List<Table> tables = em.extract();
-
         if (tables != null) {
             for (Table table: tables) {
                 table.splitCells();

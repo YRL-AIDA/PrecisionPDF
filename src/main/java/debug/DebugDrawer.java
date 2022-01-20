@@ -1,6 +1,7 @@
 package debug;
 
 
+import extractors.bordered.Range;
 import model.*;
 import model.table.Cell;
 import model.table.Table;
@@ -34,6 +35,8 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+
 import org.apache.commons.io.FilenameUtils;
 
 public class DebugDrawer {
@@ -83,6 +86,7 @@ public class DebugDrawer {
         drawBlocks();
         drawRulings();
         drawBorderedTables();
+        drawProjections();
         //drawSections();
     }
 
@@ -210,6 +214,38 @@ public class DebugDrawer {
         String font_size = String.valueOf(block.getFont().getFontSize());
         drawer.drawString(s, block.getRight(), block.getBottom());
         drawer.drawString("fs: " + font_size, block.getLeft(), block.getTop());
+    }
+
+
+    private void drawProjections() throws IOException {
+        PDDocument pdDocument = getPDDocument();
+        PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, rulingDrawStyle);
+
+        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+            Page page = pages.next();
+            int pageIndex = page.getIndex();
+            PageDrawer drawer = builder.createPageDrawer(pageIndex);
+            for (Table table: page.getTables()) {
+                for (Range h: table.getHorizontal()) {
+                    drawHorizontal(drawer, h, table);
+                }
+                //table.getHorizontal();
+                //table.getVertical();
+            }
+            drawer.close();
+        }
+
+        String outFilePath = getOutputFilePath(rulingDirectoryName, rulingFileNameSuffix);
+        pdDocument.save(outFilePath);
+        pdDocument.close();
+    }
+
+    private void drawHorizontal(PageDrawer drawer, Range range, Table table) throws IOException {
+        double x1 = range.getStart();
+        double y1 = table.getBottom();
+        double x2 = range.getEnd();
+        double y2 = table.getBottom();
+        drawer.drawLine(x1, y1, x2, y2);
     }
 
     private void drawRulings() throws IOException {

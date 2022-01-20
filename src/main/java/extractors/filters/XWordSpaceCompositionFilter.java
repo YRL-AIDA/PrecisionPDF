@@ -6,7 +6,7 @@ import model.TextChunk;
 public class XWordSpaceCompositionFilter implements BlockCompositionFilter {
 
     private static final float DEFAULT_WORD_SPACING_FACTOR = 5f;
-    private static final float DEFAULT_WORD_SPACING_ADDITION = 0f;
+    private static final float DEFAULT_WORD_SPACING_ADDITION = 5f;
 
     private static final float wordSpacingFactor;
     private static final float wordSpacingAddition;
