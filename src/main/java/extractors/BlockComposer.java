@@ -18,6 +18,7 @@ public class BlockComposer {
     private static final BlockCompositionFilter[] xFilters;
     private static final XOverlappingCharacterFilter wordMergingFilter;
     private static final BlockCompositionFilter[] yFilters;
+    private static final BlockCompositionFilter[] yLinesFilters;
 
     static {
         xFilters = new BlockCompositionFilter[] {
@@ -41,6 +42,13 @@ public class BlockComposer {
                 new YObstacleCompositionFilter(),
                 new YStrongOrderCompositionFilter()
         };
+
+        yLinesFilters = new BlockCompositionFilter[] {
+                new YSameLineFilter(),
+                new YStrongOrderCompositionFilter(),
+                new YSameLineSpaceFilter()
+        };
+
     }
 
     public void compose(Document document) {
@@ -55,6 +63,7 @@ public class BlockComposer {
         determineWordCoherence(words); // Calculate coherence
         composeWords(page);
         composeBlocks(page);
+        composeLine(page);
     }
 
     private void determineWordCoherence(List<TextChunk> words) {
@@ -145,6 +154,48 @@ public class BlockComposer {
             blockedWords.clear();
         }
         page.addBlocks(blocks);
+    }
+
+    private void composeLine(Page page) {
+        List<TextChunk> blocks = IteratorUtils.toList(page.getBlocks());
+        List<TextChunk> blockedWords = new ArrayList<>();
+
+        while (! blocks.isEmpty()) {
+            TextChunk oldBlock = blocks.get(0);
+            blockedWords.add(oldBlock);
+
+            TextChunk newBlock = oldBlock;
+            blocks.add(newBlock);
+
+            for (int i = 1; i < blocks.size(); i ++) {
+                oldBlock = blocks.get(i);
+
+                boolean canMerge = true;
+
+                for (BlockCompositionFilter filter: yLinesFilters) {
+                    if (!filter.canMerge(newBlock, oldBlock)) {
+                        canMerge = false;
+                        break;
+                    }
+                }
+                if (canMerge && newBlock.getTextLines().size() == 1 && oldBlock.getTextLines().size() == 1) {
+                    composeBlock(newBlock, oldBlock, " ");
+                    //newBlock.newTextLine(oldBlock);
+                    blockedWords.add(oldBlock);
+                    page.removeBlock(oldBlock);
+                }
+            }
+            blocks.removeAll(blockedWords);
+            blockedWords.clear();
+        }
+
+        blocks = IteratorUtils.toList(page.getBlocks());
+
+        for (int i = 0; i < blocks.size(); i ++) {
+            String s = blocks.get(i).getText().concat(System.lineSeparator());
+            blocks.get(i).setText(s);
+        }
+
     }
 
     private void composeBlocks(Page page) {
