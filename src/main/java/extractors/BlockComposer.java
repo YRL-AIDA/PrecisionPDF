@@ -46,7 +46,9 @@ public class BlockComposer {
         yLinesFilters = new BlockCompositionFilter[] {
                 new YSameLineFilter(),
                 new YStrongOrderCompositionFilter(),
-                new YSameLineSpaceFilter()
+                new YSameLineSpaceFilter(),
+                new XRulingCompositionFilter(),
+                new YRulingCompositionFilter()
         };
 
     }
@@ -179,7 +181,7 @@ public class BlockComposer {
                     }
                 }
                 if (canMerge && newBlock.getTextLines().size() == 1 && oldBlock.getTextLines().size() == 1) {
-                    composeBlock(newBlock, oldBlock, " ");
+                    composeLine(newBlock, oldBlock, " ");
                     //newBlock.newTextLine(oldBlock);
                     blockedWords.add(oldBlock);
                     page.removeBlock(oldBlock);
@@ -293,5 +295,43 @@ public class BlockComposer {
 
         block.setEndOrder(textChunk.getEndOrder());
     }
+
+    public void composeLine(TextChunk block, TextChunk textChunk, String separator) {
+        if (block.equals(textChunk)) return;
+
+        double left   = Math.min(block.getLeft(), textChunk.getLeft());
+        double bottom = Math.max(block.getBottom(), textChunk.getBottom());
+        double right  = Math.max(block.getRight(), textChunk.getRight());
+        double top    = Math.min(block.getTop(), textChunk.getTop());
+
+        block.setLeft(left);
+        block.setBottom(bottom);
+        block.setRight(right);
+        block.setTop(top);
+
+        //String s = block.getText().concat(" ").concat(textChunk.getText());
+        String s = block.getText().concat(separator).concat(textChunk.getText());
+
+        block.setText(s);
+
+        PDFFont blockFont = block.getFont();
+        if (null != blockFont) {
+            PDFFont chunkFont = textChunk.getFont();
+            if (null != chunkFont) {
+                blockFont.setName(chunkFont.getName());
+                blockFont.setItalic(chunkFont.isItalic());
+                blockFont.setBold(chunkFont.isBold());
+                blockFont.setHeight(chunkFont.getHeight());
+            }
+        }
+
+        Color chunkColor = block.getColor();
+        if (null != chunkColor) {
+            block.setColor(chunkColor);
+        }
+
+        block.setEndOrder(textChunk.getEndOrder());
+    }
+
 
 }

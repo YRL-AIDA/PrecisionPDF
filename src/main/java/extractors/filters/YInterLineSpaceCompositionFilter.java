@@ -20,11 +20,14 @@ public class YInterLineSpaceCompositionFilter implements BlockCompositionFilter 
     @Override
     public boolean canMerge(TextChunk block, TextChunk textChunk) {
         // TODO: Modify this code. The inter line spacing should be set from a font height
+        boolean result = true;
         double interLineSpacing = textChunk.getBottom() - textChunk.getTop();
         double distance = textChunk.getTop() - block.getBottom();
         if (distance < 0) return false;
 
         double maxAccessibleDistance = interLineSpacing * interLineSpacingFactor + interLineSpacingAddition;
-        return distance <= maxAccessibleDistance;
+        result = distance <= maxAccessibleDistance;
+
+        return result;
     }
 }
