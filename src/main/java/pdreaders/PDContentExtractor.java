@@ -128,7 +128,7 @@ public class PDContentExtractor extends PDFTextStripper {
                 page.addChunks(chunks);
                 page.addChars(chars);
                 page.addWords(words);
-                //page.addLines(lines);
+                page.addLines(lines);
                 page.addRulings(rulings);
             }
             catch (IOException e) {
@@ -144,7 +144,7 @@ public class PDContentExtractor extends PDFTextStripper {
         chunks.clear();
         chars.clear();
         words.clear();
-        //lines.clear();
+        lines.clear();
         rulings.clear();
 
         renderingMode.clear();
@@ -212,8 +212,8 @@ public class PDContentExtractor extends PDFTextStripper {
     private void addLine() {
         if (StringUtils.isNotBlank(lineText)) {
             if (currentPage.canPrint(lineStartPoint) && currentPage.canPrint(lineEndPoint)) {
-                //TextChunk line = new TextChunk(lineStartPoint, lineEndPoint, lineText.toString(), currentPage);
-                //this.lines.add(line);
+                TextChunk line = new TextChunk(lineStartPoint, lineEndPoint, lineText.toString(), currentPage);
+                this.lines.add(line);
 
                 // Update the minimal left and maximal right coordinates for calculating page margins
                 if (minLeft > lineStartPoint.x) minLeft = lineStartPoint.x;

@@ -235,7 +235,7 @@ public class Page extends PDFRectangle {
         if (tables.isEmpty()) return blocks;
         for (TextChunk block: blocks) {
             for (Table table: tables) {
-                if (!block.intersects(table)) {
+                if (!block.intersects(table) && !result.contains(block)) {
                     result.add(block);
                 }
             }
