@@ -180,9 +180,9 @@ public class BlockComposer {
                         break;
                     }
                 }
-                if (canMerge && newBlock.getTextLines().size() == 1 && oldBlock.getTextLines().size() == 1) {
+                if (canMerge) {
                     composeLine(newBlock, oldBlock, " ");
-                    //newBlock.newTextLine(oldBlock);
+                    newBlock.newTextLine(oldBlock);
                     blockedWords.add(oldBlock);
                     page.removeBlock(oldBlock);
                 }
