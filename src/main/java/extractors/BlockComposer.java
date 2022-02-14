@@ -54,8 +54,15 @@ public class BlockComposer {
     }
 
     public void compose(Document document) {
-        for(Iterator<Page> pages = document.getPages(); pages.hasNext();) {
+        for(Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext();) {
             Page page = pages.next();
+            compose(page);
+        }
+    }
+
+    public void compose(Document document, int startPage, int endPage) {
+        for (int i = startPage; i <= endPage; i++) {
+            Page page = document.getPage(i);
             compose(page);
         }
     }

@@ -9,6 +9,7 @@ import debug.DebugDrawer;
 import exceptions.EmptyArgumentException;
 import extractors.BlockComposer;
 import extractors.ExtractionManager;
+import extractors.filters.YInterLineSpaceCompositionFilter;
 import model.Document;
 import model.Page;
 import model.table.Table;
@@ -36,6 +37,14 @@ public class DedocTableExtractor {
     private String outArg;
     private File outputFile;
     private Path outputPath;
+
+    @Option(name = "-sp", aliases = {"--start"}, usage = "specify a start page")
+    private String sPage;
+    private int startPage;
+
+    @Option(name = "-ep", aliases = {"--end"}, usage = "specify a end page")
+    private String ePage;
+    private int endPage;
 
     @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
     private boolean help = false;
@@ -68,7 +77,16 @@ public class DedocTableExtractor {
             outputPath = outputFile.toPath();
 
             if (inputFile.isFile()) {
-                extract(inputFile.toPath());
+
+                if (sPage != null && !sPage.isEmpty() && ePage != null && !ePage.isEmpty()) {
+                    startPage = Integer.parseInt(sPage);
+                    endPage = Integer.parseInt(ePage);
+                    //if (startPage <= endPage) {
+                        extract(inputFile.toPath(), startPage - 1, endPage - 1);
+                    //}
+                } else {
+                    extract(inputFile.toPath());
+                }
             } else {
                 final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**.{pdf,PDF}");
                 try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(inputPath, "*.pdf")) {
@@ -87,6 +105,53 @@ public class DedocTableExtractor {
             e.printStackTrace();
         }
     }
+
+    public void extract(Path path, int startPage, int endPage) throws IOException {
+
+        Document document = null;
+        DebugDrawer debugDrawer = null;
+
+        document = Document.load(path);
+        int lastPageIndex = document.getPages().size() - 1;
+        if (startPage > lastPageIndex)
+            return;
+        startPage = startPage < 0 ? 0: startPage;
+        endPage = endPage > lastPageIndex ? lastPageIndex : endPage;
+        BlockComposer bc = new BlockComposer();
+        bc.compose(document, startPage, endPage);
+
+        ExtractionManager em = new ExtractionManager(document);
+        List<Table> tables = em.extract(startPage, endPage);
+        if (tables != null) {
+            for (Table table: tables) {
+                table.splitCells();
+                table.completeRows();
+                table.removeEmptyRows();
+            }
+        }
+
+        Path debugDirPath = outputPath.resolve("debug");
+        DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
+                .setChunkDirectoryName("Chunks")
+                .setChunkFileNameSuffix("CHUNKS")
+                .setCharDirectoryName("Chars")
+                .setCharFileNameSuffix("CHARS")
+                .setWordDirectoryName("Words")
+                .setWordFileNameSuffix("WORDS")
+                .setBlockDirectoryName("Blocks")
+                .setBlockFileNameSuffix("BLOCKS")
+                .setRulingDirectoryName("Rulings")
+                .setRulingFileNameSuffix("RULINGS")
+                .setBorderedTableDirectoryName("BorderedTables")
+                .setBorderedTableFileNameSuffix("BORDERED");
+
+        debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
+        debugDrawer.drawBeforeRecomposing();
+
+        //writeTables(document);
+        printJSON(document, startPage, endPage);
+    }
+
 
     public void extract(Path path) throws IOException {
         Document document = null;
@@ -134,6 +199,11 @@ public class DedocTableExtractor {
         System.out.println(writer.write());
     }
 
+    private void printJSON(Document document, int startPage, int endPage) {
+        JsonDocumentWriter writer = new JsonDocumentWriter(document, startPage, endPage);
+        System.out.println(writer.write());
+    }
+
     private void printTables(Document document) throws IOException {
         Path output = outputPath.resolve("tables");
         Files.createDirectories(output);
@@ -156,7 +226,7 @@ public class DedocTableExtractor {
         html.append("<body>").append(System.lineSeparator());
 
         try {
-            Iterator<Page> pages = document.getPages();
+            Iterator<Page> pages = document.getPagesItrerator();
             while (pages.hasNext()) {
                 Page page = pages.next();
                 html.append("<h1>Page ").append(page.getIndex()).append("</h1>").append(System.lineSeparator());
@@ -212,7 +282,7 @@ public class DedocTableExtractor {
         html.append("<body>").append(System.lineSeparator());
 
         try {
-            Iterator<Page> pages = document.getPages();
+            Iterator<Page> pages = document.getPagesItrerator();
             while (pages.hasNext()) {
                 Page page = pages.next();
                 html.append("<h1>Page ").append(page.getIndex()).append("</h1>").append(System.lineSeparator());

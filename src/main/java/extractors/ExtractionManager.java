@@ -36,7 +36,7 @@ public final class ExtractionManager {
 
         String docFileName = document.getSourceFile().getName();
 
-        for(Iterator<Page> pages = document.getPages(); pages.hasNext();) {
+        for(Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext();) {
             Page page = pages.next();
             //WorkArea area = createWorkArea(page.getLeft(), page.getTop(), page.getRight(), page.getBottom(), page, null);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
@@ -53,6 +53,37 @@ public final class ExtractionManager {
         }
 
          return result.isEmpty() ? null : result;
+    }
+
+    public List<Table> extract(int startPage, int endPage) {
+        List<Table> result = new ArrayList<>();
+
+        // Detect and build blocks
+        /*BlockComposer bc = new BlockComposer();
+        bc.compose(document);*/
+
+        // Detect running titles
+        //detectRunningTitles(document);
+
+        String docFileName = document.getSourceFile().getName();
+
+        for(int i = startPage; i <= endPage; i++) {
+            Page page = document.getPage(i);
+            //WorkArea area = createWorkArea(page.getLeft(), page.getTop(), page.getRight(), page.getBottom(), page, null);
+            BorderedTableExtractor bte = new BorderedTableExtractor(page);
+            List<Table> borderedTables = bte.extract();
+            int ordinal = 1;
+
+            // Code tables
+            if (null != borderedTables) {
+                codeTables(borderedTables, docFileName, ordinal, page.getIndex(), "BR");
+                codeBorderedTRables(borderedTables, docFileName, ordinal, page.getIndex());
+                result.addAll(borderedTables);
+            }
+
+        }
+
+        return result.isEmpty() ? null : result;
     }
 
     private void codeBorderedTRables(List<Table> tables, String fileName, int section, int pageIndex) {

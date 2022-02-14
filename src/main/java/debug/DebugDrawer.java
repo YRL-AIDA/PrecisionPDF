@@ -114,7 +114,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, chunkDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
 
@@ -140,7 +140,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, charDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
 
@@ -164,7 +164,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, wordDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
 
@@ -192,7 +192,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, blockDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
 
@@ -221,7 +221,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, rulingDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
             PageDrawer drawer = builder.createPageDrawer(pageIndex);
@@ -252,7 +252,7 @@ public class DebugDrawer {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, rulingDrawStyle);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
             PageDrawer drawer = builder.createPageDrawer(pageIndex);
@@ -325,7 +325,7 @@ public class DebugDrawer {
         DrawStyle ds4 = new DrawStyle.Builder().setStrokingColor(Color.ORANGE).setLineWidth(3f).createDrawStyle();
         PageDrawer.Builder builder4 = new PageDrawer.Builder(pdDocument, ds4);
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
 
             PageDrawer drawer3 = builder1.createPageDrawer(page.getIndex());
@@ -353,7 +353,7 @@ public class DebugDrawer {
             drawer3.close();
         }
 
-        for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             PageDrawer drawer3 = builder3.createPageDrawer(page.getIndex());
             for (Iterator<Table> tableIterator = page.getTables().iterator(); tableIterator.hasNext(); ) {

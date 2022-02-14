@@ -116,9 +116,13 @@ public class Document implements Closeable {
         return sourceFile;
     }
 
-    public Iterator<Page> getPages() {
+    public Iterator<Page> getPagesItrerator() {
         return pages.iterator();
     }
+    public List<Page> getPages() {
+        return pages;
+    }
+
 
     public PDPage getPDPage(int index){
         return pdDocument.getPage(index) != null ? pdDocument.getPage(index) : null;

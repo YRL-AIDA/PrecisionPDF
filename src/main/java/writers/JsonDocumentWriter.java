@@ -18,18 +18,38 @@ public class JsonDocumentWriter {
 
     private Document document;
     JSONObject json = new JSONObject();
+    int startPage = 0;
+    int endPage = 0;
+    boolean partiacalExtraction = false;
 
     public JsonDocumentWriter(Document document){
         this.document = document;
         this.json = new JSONObject();
         this.json.put("document", this.document.getSourceFile().getName());
+        this.partiacalExtraction = false;
+    }
+
+    public JsonDocumentWriter(Document document, int startPage, int endPage){
+        this.document = document;
+        this.json = new JSONObject();
+        this.json.put("document", this.document.getSourceFile().getName());
+        this.startPage = startPage;
+        this.endPage = endPage;
+        this.partiacalExtraction = true;
     }
 
     public String write(){
         JSONArray jsonPages = new JSONArray();
-        for (Iterator<Page> it = this.document.getPages(); it.hasNext(); ) {
-            Page page = it.next();
-            jsonPages.put(writePage(page));
+        if (partiacalExtraction) {
+            for (int i = startPage; i <= endPage; i++) {
+                Page page = document.getPage(i);
+                jsonPages.put(writePage(page));
+            }
+        } else {
+            for (Iterator<Page> it = this.document.getPagesItrerator(); it.hasNext(); ) {
+                Page page = it.next();
+                jsonPages.put(writePage(page));
+            }
         }
         json.put("pages", jsonPages);
         return json.toString();
