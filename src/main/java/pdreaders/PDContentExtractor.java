@@ -27,6 +27,7 @@ public class PDContentExtractor extends PDFTextStripper {
     private final List<TextChunk> chunks; // Original text chunks extracted from the PDF document
     private final List<TextChunk> chars;  // Characters extracted from original PDF chunks
     private final List<TextChunk> words;  // Words composed from characters
+    private final List<TextChunk> tmpWords;
     private final List<TextChunk> lines;  // Text lines composed from characters
     private final List<Ruling> rulings;   // Ruling lines from the PDF document
 
@@ -65,6 +66,7 @@ public class PDContentExtractor extends PDFTextStripper {
         chunks = new ArrayList<>(500);
         chars = new ArrayList<>(5000);
         words = new ArrayList<>(1000);
+        tmpWords = new ArrayList<>(100);
         lines = new ArrayList<>(500);
         rulings = new ArrayList<>(200);
 
@@ -144,6 +146,7 @@ public class PDContentExtractor extends PDFTextStripper {
         chunks.clear();
         chars.clear();
         words.clear();
+        tmpWords.clear();
         lines.clear();
         rulings.clear();
 
@@ -188,9 +191,11 @@ public class PDContentExtractor extends PDFTextStripper {
         super.processTextPosition(text);
     }
 
-    @Override
-    protected void startPage(PDPage page) throws IOException {
-        super.startPage(page);
+    public void setStartPage(int page) {
+        super.setStartPage(page);
+    }
+    public void setEndPage(int page) {
+        super.setEndPage(page);
     }
 
     @Override
@@ -212,9 +217,21 @@ public class PDContentExtractor extends PDFTextStripper {
     private void addLine() {
         if (StringUtils.isNotBlank(lineText)) {
             if (currentPage.canPrint(lineStartPoint) && currentPage.canPrint(lineEndPoint)) {
-                TextChunk line = new TextChunk(lineStartPoint, lineEndPoint, lineText.toString(), currentPage);
+                StringBuilder text = new StringBuilder();
+                for(int i = 0; i < tmpWords.size() - 1; i++){
+                    text.append(tmpWords.get(i).getText());
+                    text.append(" ");
+                }
+                if (tmpWords.size() == 0) {
+                    return;
+                }
+                text.append(tmpWords.get(tmpWords.size() - 1).getText());
+                text.append("\n");
+                TextChunk line = new TextChunk(lineStartPoint, lineEndPoint, text.toString(), currentPage);
+                line.setId(order);
+                line.addWords(tmpWords);
                 this.lines.add(line);
-
+                tmpWords.clear();
                 // Update the minimal left and maximal right coordinates for calculating page margins
                 if (minLeft > lineStartPoint.x) minLeft = lineStartPoint.x;
                 if (maxRight < lineEndPoint.x) maxRight = lineEndPoint.x;
@@ -360,6 +377,10 @@ public class PDContentExtractor extends PDFTextStripper {
 
                     if (Float.compare(wordBottom, bottom) < 0)
                         wordBottom = bottom;
+
+                    spaceWidth = tp.getWidthOfSpace();
+                    wordFont = getFont(tp);
+                    color = getColor(tp);
                 }
                 else {
                     // The new word ends here
@@ -367,13 +388,18 @@ public class PDContentExtractor extends PDFTextStripper {
                     String wordText = sb.toString();
 
                     TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
+                    spaceWidth = tp.getWidthOfSpace();
+                    wordFont = getFont(tp);
+                    color = getColor(tp);
                     word.setFont(wordFont);
                     word.updateTextLine();
                     word.setColor(color);
                     word.setSpaceWidth(spaceWidth);
                     word.setStartOrder(order);
                     word.setEndOrder(order);
+                    word.setId(order);
                     words.add(word);
+                    tmpWords.add(word);
 
                     // A new word starts here
                     sb.setLength(0);
@@ -412,6 +438,8 @@ public class PDContentExtractor extends PDFTextStripper {
             word.setStartOrder(order);
             word.setEndOrder(order);
             words.add(word);
+            word.setId(order);
+            tmpWords.add(word);
         }
     }
 
@@ -471,7 +499,7 @@ public class PDContentExtractor extends PDFTextStripper {
         // Chunk processing
         TextChunk chunk = new TextChunk(minLeft, minTop, maxRight, maxBottom, string, currentPage);
 
-        //chunk.addAllTextPositions(textPositions);
+        chunk.addAllTextPositions(textPositions);
 
         chunk.setStartOrder(order);
         chunks.add(chunk);

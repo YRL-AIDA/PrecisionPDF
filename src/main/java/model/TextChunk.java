@@ -20,6 +20,7 @@ public class TextChunk extends PDFRectangle {
     private int coherence;
     private boolean modified = false;
     private List<TextPosition> textPositions = new ArrayList<>();
+    private String metadata = "";
 
     public TextChunk(double left, double top, double right, double bottom, String text, Page page) {
         super(left, top, right, bottom);
@@ -121,6 +122,7 @@ public class TextChunk extends PDFRectangle {
     }
 
     private List<TextLine> textLines = new ArrayList<>();
+    private List<TextLine> words = new ArrayList<>();
 
     public void updateTextLine() {
         TextLine textLine = textLines.get(0);
@@ -142,6 +144,24 @@ public class TextChunk extends PDFRectangle {
         textLines.addAll(block.textLines);
     }
 
+    public void addWords(List<TextChunk> words) {
+        int order = 0;
+        for (TextChunk c: words) {
+            order = Math.max(order, c.getEndOrder());
+            String text = c.getText();
+            PDFRectangle bbox = new PDFRectangle(c.getLeft(), c.getTop(), c.getRight(), c.getBottom());
+            PDFFont font = c.getFont();
+            TextLine textLine = new TextLine(text, bbox, font);
+            this.words.add(textLine);
+        }
+        setEndOrder(order);
+        setStartOrder(order);
+    }
+
+    public List<TextLine> getWords() {
+        return words;
+    }
+
     public List<TextLine> getTextLines() {
         return textLines;
     }
@@ -152,6 +172,14 @@ public class TextChunk extends PDFRectangle {
 
     public Iterator<TextPosition> getTextPositions() {
         return textPositions.iterator();
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
     public class TextLine {

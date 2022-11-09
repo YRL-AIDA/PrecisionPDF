@@ -6,7 +6,6 @@ import model.TextChunk;
 import model.table.Table;
 import org.apache.commons.lang3.StringUtils;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

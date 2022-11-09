@@ -1,6 +1,5 @@
 package model;
 
-import jdk.nashorn.internal.ir.Block;
 import model.table.Cell;
 import model.table.Table;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -34,14 +33,10 @@ public class Page extends PDFRectangle {
     private final java.util.List<Ruling> verticalRulings;   // Vertical normalized rulings
     private final java.util.List<Ruling> horizontalRulings; // Horizontal normalized rulings
     private final java.util.List<Ruling> visibleRulings;
-    private java.util.List<Ruling> joinedRulings;
-    //private java.util.List<Ruling> borderedTableExtractionRulings;
-
-    //private java.util.List<TableArea> tableAreas;
     private java.util.List<PDFRectangle> possibleTables;
     private java.util.List<Table> tables;
-    //private java.util.List<Table> nakedTables;
     private List<PDFRectangle> cells;
+    private List<Tag> tags;
 
     // Initialization
     {
@@ -60,13 +55,12 @@ public class Page extends PDFRectangle {
         cells             = new ArrayList<>();
         possibleTables    = new ArrayList<>();
         tables            = new ArrayList<>();
-        //borderedTableExtractionRulings = new ArrayList<>();
 
     }
 
     public Page(Document document, int index, float left, float top, float right, float bottom) {
         super(left, top, right, bottom);
-
+        tags = new ArrayList<>();
         if (null == document) {
             throw new IllegalArgumentException("Document cannot be null");
         } else {
@@ -89,6 +83,13 @@ public class Page extends PDFRectangle {
         else
             orientation = Orientation.NEITHER;
 
+    }
+    public void addTag(Tag tag){
+        tags.add(tag);
+    }
+
+    public List<Tag> getTags(){
+        return tags;
     }
 
     public int getIndex() {
@@ -129,12 +130,6 @@ public class Page extends PDFRectangle {
         return document.getPDPage(index);
     }
 
-/*    public boolean addBorderedTableRuling(List<Ruling> visibleRulings){
-        this.borderedTableExtractionRulings.clear();
-        boolean result = visibleRulings == null ? false : this.visibleRulings.addAll(rulings);
-        return result;
-    }*/
-
     public boolean addVisibleRulings(List<Ruling> visibleRulings) {
         this.visibleRulings.clear();
         boolean result = visibleRulings == null ? false : this.visibleRulings.addAll(rulings);
@@ -151,8 +146,8 @@ public class Page extends PDFRectangle {
         return lt < point.x && point.x < rt && tp < point.y && point.y < bm;
     }
 
-    public void addLines(List<TextChunk> lines) {
-        lines.addAll(lines);
+    public boolean addLines(List<TextChunk> lines) {
+        return this.lines.addAll(lines);
     }
 
     public Iterator<TextChunk> getChunks() {
@@ -234,6 +229,22 @@ public class Page extends PDFRectangle {
         List<TextChunk> result = new ArrayList<>();
         if (tables.isEmpty()) return blocks;
         for (TextChunk block: blocks) {
+            for (Table table: tables) {
+                if (!block.intersects(table) && !result.contains(block)) {
+                    result.add(block);
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<TextChunk> getTextLines(){
+        return lines;
+    }
+    public List<TextChunk> getOutsideTextLines(){
+        List<TextChunk> result = new ArrayList<>();
+        if (tables.isEmpty()) return lines;
+        for (TextChunk block: lines) {
             for (Table table: tables) {
                 if (!block.intersects(table) && !result.contains(block)) {
                     result.add(block);

@@ -9,10 +9,7 @@ import model.table.Table;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.xml.soap.Text;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class JsonDocumentWriter {
 
@@ -56,7 +53,7 @@ public class JsonDocumentWriter {
     }
 
     private JSONObject writePage(Page page){
-        JSONObject jsonPage = new JSONObject();
+/*        JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
         jsonPage.put("number", page.getIndex());
@@ -85,6 +82,55 @@ public class JsonDocumentWriter {
                 annotation.put("is_normal", chunk.getFont().isNormal());
                 annotation.put("font_name", chunk.getFont().getName());
                 annotation.put("font_size", (int)block.getFont().getFontSize());
+                annotation.put("x_top_left", (int)chunk.getBbox().getLeft());
+                annotation.put("y_top_left", (int)chunk.getBbox().getTop());
+                annotation.put("width", (int)chunk.getBbox().getWidth());
+                annotation.put("height", (int)chunk.getBbox().getHeight());
+                annotation.put("start", start);
+                int len = chunk.getText().length();
+                annotation.put("end", start + len);
+                start = start + len + 1;
+                jsonAnnotations.put(annotation);
+            }
+            jsonBlock.put("annotations", jsonAnnotations);
+            jsonBlocks.put(jsonBlock);
+        }
+        jsonPage.put("blocks",jsonBlocks);*/
+
+        JSONObject jsonPage = new JSONObject();
+        JSONArray jsonBlocks = new JSONArray();
+        JSONArray jsonTables = new JSONArray();
+        jsonPage.put("number", page.getIndex());
+        jsonPage.put("width", page.getWidth());
+        jsonPage.put("height", page.getHeight());
+        for (TextChunk block: page.getOutsideTextLines()) {
+            JSONObject jsonBlock = new JSONObject();
+            JSONArray jsonAnnotations = new JSONArray();
+            jsonBlock.put("order", block.getId());
+            jsonBlock.put("x_top_left", (int)block.getLeft());
+            jsonBlock.put("y_top_left", (int)block.getTop());
+            jsonBlock.put("width", (int)block.getWidth());
+            jsonBlock.put("height", (int)block.getHeight());
+            jsonBlock.put("text", block.getText());
+            if (!block.getMetadata().equals("")) {
+                jsonBlock.put("metadata", block.getMetadata());
+            } else {
+                jsonBlock.put("metadata", "unknown");
+            }
+            //jsonBlock.put("is_bold", block.getFont().isBold());
+            //jsonBlock.put("is_italic", block.getFont().isItalic());
+            //jsonBlock.put("is_normal", block.getFont().isNormal());
+            //jsonBlock.put("font_name", block.getFont().getName());
+            //jsonBlock.put("font_size", (int)block.getFont().getFontSize());
+            int start = 0;
+            for (TextChunk.TextLine chunk: block.getWords()){
+                JSONObject annotation = new JSONObject();
+                annotation.put("text", chunk.getText());
+                annotation.put("is_bold", chunk.getFont().isBold());
+                annotation.put("is_italic", chunk.getFont().isItalic());
+                annotation.put("is_normal", chunk.getFont().isNormal());
+                annotation.put("font_name", chunk.getFont().getName());
+                annotation.put("font_size", (int)chunk.getFont().getFontSize());
                 annotation.put("x_top_left", (int)chunk.getBbox().getLeft());
                 annotation.put("y_top_left", (int)chunk.getBbox().getTop());
                 annotation.put("width", (int)chunk.getBbox().getWidth());

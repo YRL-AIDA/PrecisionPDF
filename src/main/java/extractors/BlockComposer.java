@@ -61,7 +61,7 @@ public class BlockComposer {
     }
 
     public void compose(Document document, int startPage, int endPage) {
-        for (int i = startPage; i <= endPage; i++) {
+        for (int i = startPage; i < endPage; i++) {
             Page page = document.getPage(i);
             compose(page);
         }

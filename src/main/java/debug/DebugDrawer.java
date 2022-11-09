@@ -5,6 +5,7 @@ import extractors.bordered.Range;
 import model.*;
 import model.table.Cell;
 import model.table.Table;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.contentstream.PDFStreamEngine;
 import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -101,7 +102,7 @@ public class DebugDrawer {
 
     private PDDocument getPDDocument() throws IOException {
         File file = document.getSourceFile();
-        PDDocument pdDocument = PDDocument.load(file);
+        PDDocument pdDocument = Loader.loadPDF(file);
 
         if (pdDocument.isEncrypted()) {
             pdDocument.setAllSecurityToBeRemoved(true);

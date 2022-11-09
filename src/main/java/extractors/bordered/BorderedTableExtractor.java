@@ -11,7 +11,6 @@ import model.table.Table;
 import model.table.TableType;
 import utils.Utils;
 
-import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;

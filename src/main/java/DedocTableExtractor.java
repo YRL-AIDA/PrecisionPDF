@@ -15,6 +15,8 @@ import model.Page;
 import model.table.Table;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -82,7 +84,7 @@ public class DedocTableExtractor {
                     startPage = Integer.parseInt(sPage);
                     endPage = Integer.parseInt(ePage);
                     //if (startPage <= endPage) {
-                        extract(inputFile.toPath(), startPage - 1, endPage - 1);
+                    extract(inputFile.toPath(), startPage - 1, endPage - 1);
                     //}
                 } else {
                     extract(inputFile.toPath());
@@ -111,8 +113,8 @@ public class DedocTableExtractor {
         Document document = null;
         DebugDrawer debugDrawer = null;
 
-        document = Document.load(path);
-        int lastPageIndex = document.getPages().size() - 1;
+        document = Document.load(path, startPage, endPage);
+        int lastPageIndex = document.getPageCnt();
         if (startPage > lastPageIndex)
             return;
         startPage = startPage < 0 ? 0: startPage;
@@ -130,7 +132,10 @@ public class DedocTableExtractor {
             }
         }
 
-        Path debugDirPath = outputPath.resolve("debug");
+        writeTables(document);
+        printJSON(document, startPage, endPage);
+
+        /*        Path debugDirPath = outputPath.resolve("debug");
         DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
                 .setChunkDirectoryName("Chunks")
                 .setChunkFileNameSuffix("CHUNKS")
@@ -146,18 +151,16 @@ public class DedocTableExtractor {
                 .setBorderedTableFileNameSuffix("BORDERED");
 
         debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
-        debugDrawer.drawBeforeRecomposing();
+        debugDrawer.drawBeforeRecomposing();*/
 
-        //writeTables(document);
-        printJSON(document, startPage, endPage);
     }
 
 
     public void extract(Path path) throws IOException {
         Document document = null;
         DebugDrawer debugDrawer = null;
-
-        document = Document.load(path);
+        PDDocument pdDocument = Loader.loadPDF(path.toFile());
+        document = Document.load(path, 0, pdDocument.getPages().getCount() - 1);
 
         BlockComposer bc = new BlockComposer();
         bc.compose(document);
@@ -172,7 +175,7 @@ public class DedocTableExtractor {
             }
         }
 
-        Path debugDirPath = outputPath.resolve("debug");
+/*        Path debugDirPath = outputPath.resolve("debug");
         DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
                 .setChunkDirectoryName("Chunks")
                 .setChunkFileNameSuffix("CHUNKS")
@@ -190,7 +193,7 @@ public class DedocTableExtractor {
         debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
         debugDrawer.drawBeforeRecomposing();
 
-        writeTables(document);
+        writeTables(document);*/
         printJSON(document);
     }
 

@@ -5,12 +5,8 @@ import model.Document;
 import model.Page;
 import model.table.Table;
 import model.table.TableType;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 
 public final class ExtractionManager {
@@ -67,7 +63,7 @@ public final class ExtractionManager {
 
         String docFileName = document.getSourceFile().getName();
 
-        for(int i = startPage; i <= endPage; i++) {
+        for(int i = startPage; i < endPage; i++) {
             Page page = document.getPage(i);
             //WorkArea area = createWorkArea(page.getLeft(), page.getTop(), page.getRight(), page.getBottom(), page, null);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
