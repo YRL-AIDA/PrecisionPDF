@@ -49,10 +49,11 @@ class PageDrawer  implements Closeable {
         // TODO: Modify this code, need to set the affine transformation to the current content stream
         y1 = pageHeight - y1;
         y2 = pageHeight - y2;
-
         contentStream.moveTo((float) x1, (float) y1);
         contentStream.lineTo((float) x2, (float) y2);
+        contentStream.fillAndStrokeEvenOdd();
         contentStream.stroke();
+        contentStream.fill();
         contentStream.moveTo((float) x1,(float) y1);
     }
 

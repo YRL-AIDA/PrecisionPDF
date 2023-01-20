@@ -31,6 +31,12 @@ import pdreaders.VisibleRulingExtractor;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
@@ -244,7 +250,6 @@ public class Document implements Closeable {
         }
         Map<Integer, PDMarkedContent> theseMarkedContents = markedContents.get(page);
         int indexHere = index++;
-        //System.out.printf("<%s index=%s>\n", structType, indexHere);
         for (Object object: node.getKids()) {
             if (object instanceof COSArray) {
                 for (COSBase base : (COSArray) object) {
@@ -252,8 +257,6 @@ public class Document implements Closeable {
                         boxes = union(boxes, showStructure(document, PDStructureNode.create((COSDictionary) base), markedContents));
                     } else if (base instanceof COSNumber) {
                         boxes = union(boxes, page, this.showContent(((COSNumber)base).intValue(), theseMarkedContents));
-                    } else {
-                        //System.out.printf("?%s\n", base);
                     }
                 }
             } else if (object instanceof PDStructureNode) {
@@ -264,12 +267,9 @@ public class Document implements Closeable {
                 page = ((PDMarkedContentReference) object).getPage();
                 theseMarkedContents = markedContents.get(page);
                 boxes = union(boxes, page, showContent(((PDMarkedContentReference) object).getMCID(), theseMarkedContents));
-            } else {
-                //System.out.printf("?%s\n", object);
             }
         }
 
-        //System.out.printf("</%s>\n", structType);
 
         if (boxes != null && structType != null) {
             Color color = new Color((int)(Math.random() * 256), (int)(Math.random() * 256), (int)(Math.random() * 256));
@@ -284,28 +284,11 @@ public class Document implements Closeable {
 
                 result.put(page, box);
 
-/*
-                if (structType.equals("LBody") || structType.equals("TR")
-                        || structType.equals("Div")  || structType.equals("Document")
-                        || structType.equals("Form") || structType.equals("Span")
-                        || structType.equals("Normal (Web)") || structType.equals("Footnote")
-                        || structType.equals("Link") || structType.equals("Footnote")
-                ) {
-                    continue;
-                }
-*/
-
                 Page p = taggedPages.get(page);
 
                 if (p == null) {
                     continue;
                 }
-
-                //if (structType.equals("Table")) {
-                //    p.addTag(new Tag(TagsName.TABLE, box));
-                //} else if (structType.equals("Figure")) {
-                //    p.addTag(new Tag(TagsName.FIGURE, box));
-                //} else
 
                 if (structType.equals("Footnote")) {
                     Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(), (float)page.getBBox().getHeight() - (float)box.getMaxY(), (float)box.getWidth(), (float)box.getHeight());
@@ -314,9 +297,6 @@ public class Document implements Closeable {
                     Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(), (float)page.getBBox().getHeight() - (float)box.getMaxY(), (float)box.getWidth(), (float)box.getHeight());
                     p.addTag(new Tag(TagsName.PAGE_ID, rec));
                 }
-                //else {
-                  //  p.addTag(new Tag(TagsName.UNKNOWN, box));
-                //}
             }
         }
         return result;
@@ -451,7 +431,6 @@ public class Document implements Closeable {
             }
         }
     }
-
     private List<RenderedImage> getImagesFromResources(PDResources resources) throws IOException {
         List<RenderedImage> images = new ArrayList<>();
 
@@ -467,6 +446,9 @@ public class Document implements Closeable {
 
         return images;
     }
+
+
+
 
 
 }

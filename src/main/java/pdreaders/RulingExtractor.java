@@ -122,7 +122,7 @@ public class RulingExtractor extends PDFGraphicsStreamEngine {
     @Override
     public void endPath() throws IOException {
 
-        if (/*getGraphicsState().getNonStrokeAlphaConstant() == getGraphicsState().getAlphaConstant() ||*/
+        if (getGraphicsState().getNonStrokeAlphaConstant() == getGraphicsState().getAlphaConstant() ||
                 getGraphicsState().getNonStrokingColor().equals(getGraphicsState().getStrokingColor()) ||
                         getGraphicsState().getNonStrokingColorSpace().equals(getGraphicsState().getStrokingColorSpace()) ||
                         getGraphicsState().getNonStrokingJavaComposite().equals(getGraphicsState().getStrokingJavaComposite())) {

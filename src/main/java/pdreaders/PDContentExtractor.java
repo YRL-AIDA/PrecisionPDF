@@ -6,10 +6,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
-import model.PDFFont;
-import model.Page;
-import model.Ruling;
-import model.TextChunk;
+import model.*;
 import org.apache.pdfbox.contentstream.operator.color.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -62,7 +59,9 @@ public class PDContentExtractor extends PDFTextStripper {
 
     public PDContentExtractor(PDDocument document) throws IOException {
         this.document = document;
-
+        //this.setShouldSeparateByBeads(false);
+        //this.setSortByPosition(true);
+        this.setSuppressDuplicateOverlappingText(true);
         chunks = new ArrayList<>(500);
         chars = new ArrayList<>(5000);
         words = new ArrayList<>(1000);
@@ -118,6 +117,7 @@ public class PDContentExtractor extends PDFTextStripper {
         return maxRight;
     }
 
+    @SuppressWarnings("fallthrough")
     public void process(Page page) {
         if (null == page) {
             throw new IllegalArgumentException("Page cannot be null");
@@ -128,7 +128,7 @@ public class PDContentExtractor extends PDFTextStripper {
             try {
                 stripPage(pageIndex);
                 page.addChunks(chunks);
-                page.addChars(chars);
+                //page.addChars(chars);
                 page.addWords(words);
                 page.addLines(lines);
                 page.addRulings(rulings);
@@ -149,17 +149,16 @@ public class PDContentExtractor extends PDFTextStripper {
         tmpWords.clear();
         lines.clear();
         rulings.clear();
-
         renderingMode.clear();
         strokingColor.clear();
         nonStrokingColor.clear();
-
         newLineStarted = false;
         lineStartPoint.setLocation(0f, 0f);
         lineEndPoint.setLocation(0f, 0f);
         lineText.setLength(0);
     }
 
+    @SuppressWarnings("fallthrough")
     private void stripPage(int pageIndex) throws IOException {
         PDPage page = document.getPage(pageIndex);
 
@@ -183,11 +182,11 @@ public class PDContentExtractor extends PDFTextStripper {
     private final Map<TextPosition, PDColor> nonStrokingColor = new HashMap<>();
 
     @Override
+    @SuppressWarnings("fallthrough")
     protected void processTextPosition(TextPosition text) {
         renderingMode.put(text, getGraphicsState().getTextState().getRenderingMode());
         strokingColor.put(text, getGraphicsState().getStrokingColor());
         nonStrokingColor.put(text, getGraphicsState().getNonStrokingColor());
-
         super.processTextPosition(text);
     }
 
@@ -227,10 +226,10 @@ public class PDContentExtractor extends PDFTextStripper {
                 }
                 text.append(tmpWords.get(tmpWords.size() - 1).getText());
                 text.append("\n");
-                TextChunk line = new TextChunk(lineStartPoint, lineEndPoint, text.toString(), currentPage);
+                TextLine line = new TextLine(lineStartPoint, lineEndPoint, text.toString(), currentPage);
                 line.setId(order);
                 line.addWords(tmpWords);
-                this.lines.add(line);
+                mergeLines(line);
                 tmpWords.clear();
                 // Update the minimal left and maximal right coordinates for calculating page margins
                 if (minLeft > lineStartPoint.x) minLeft = lineStartPoint.x;
@@ -239,6 +238,19 @@ public class PDContentExtractor extends PDFTextStripper {
         }
     }
 
+    private void mergeLines(TextLine line){
+        /*for (TextChunk l: this.lines) {
+            l.setTop(l.getTop()+1);
+            l.setBottom(l.getBottom()+1);
+            if (l.intersects(line)) {
+                line.addWors(l.getWords());
+                l.retract();
+            }
+            l.setTop(l.getTop()-1);
+            l.setBottom(l.getBottom()-1);
+        }*/
+        this.lines.add(line);
+    }
     private Color getColor(TextPosition textPosition) throws IOException {
         RenderingMode rm = renderingMode.get(textPosition);
         if (rm == RenderingMode.FILL || rm == RenderingMode.NEITHER) {
@@ -254,7 +266,6 @@ public class PDContentExtractor extends PDFTextStripper {
 
     private PDFFont getFont(TextPosition textPosition) {
         PDFont pdFont = textPosition.getFont();
-        //float fontSize = textPosition.getFontSize();
         float fontSize = textPosition.getFontSizeInPt();
         if (null == pdFont)
             return null;
@@ -319,10 +330,6 @@ public class PDContentExtractor extends PDFTextStripper {
         return false;
     }
 
-    private void extractLines(int order, List<TextPosition> textPositions) throws IOException {
-
-    }
-
     private void extractWords(int order, List<TextPosition> textPositions) throws IOException {
         if (null == textPositions || textPositions.isEmpty()) return;
 
@@ -367,8 +374,10 @@ public class PDContentExtractor extends PDFTextStripper {
             final float right  = tp.getXDirAdj() + tp.getWidthDirAdj();
             final float bottom = tp.getYDirAdj();
 
+            //if (tp.getWidthOfSpace() )
+            //epsilon = tp.getWidthOfSpace();
             if (newWordStarted) {
-                if (Math.abs(wordRight - left) < epsilon) {
+                if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2) {
                     sb.append(text);
                     wordRight = right;
 
@@ -444,6 +453,7 @@ public class PDContentExtractor extends PDFTextStripper {
     }
 
     @Override
+    @SuppressWarnings("fallthrough")
     protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
         // Increment the order an original chunk in its PDF document
         order ++;

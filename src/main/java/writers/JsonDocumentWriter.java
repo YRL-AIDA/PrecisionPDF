@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class JsonDocumentWriter {
 
@@ -53,75 +54,40 @@ public class JsonDocumentWriter {
     }
 
     private JSONObject writePage(Page page){
-/*        JSONObject jsonPage = new JSONObject();
-        JSONArray jsonBlocks = new JSONArray();
-        JSONArray jsonTables = new JSONArray();
-        jsonPage.put("number", page.getIndex());
-        jsonPage.put("width", page.getWidth());
-        jsonPage.put("height", page.getHeight());
-        for (TextChunk block: page.getOutsideBlocks()) {
-            JSONObject jsonBlock = new JSONObject();
-            JSONArray jsonAnnotations = new JSONArray();
-            jsonBlock.put("order", block.getId());
-            jsonBlock.put("x_top_left", (int)block.getLeft());
-            jsonBlock.put("y_top_left", (int)block.getTop());
-            jsonBlock.put("width", (int)block.getWidth());
-            jsonBlock.put("height", (int)block.getHeight());
-            jsonBlock.put("text", block.getText());
-            jsonBlock.put("is_bold", block.getFont().isBold());
-            jsonBlock.put("is_italic", block.getFont().isItalic());
-            jsonBlock.put("is_normal", block.getFont().isNormal());
-            jsonBlock.put("font_name", block.getFont().getName());
-            jsonBlock.put("font_size", (int)block.getFont().getFontSize());
-            int start = 0;
-            for (TextChunk.TextLine chunk: block.getTextLines()){
-                JSONObject annotation = new JSONObject();
-                annotation.put("text", chunk.getText());
-                annotation.put("is_bold", chunk.getFont().isBold());
-                annotation.put("is_italic", chunk.getFont().isItalic());
-                annotation.put("is_normal", chunk.getFont().isNormal());
-                annotation.put("font_name", chunk.getFont().getName());
-                annotation.put("font_size", (int)block.getFont().getFontSize());
-                annotation.put("x_top_left", (int)chunk.getBbox().getLeft());
-                annotation.put("y_top_left", (int)chunk.getBbox().getTop());
-                annotation.put("width", (int)chunk.getBbox().getWidth());
-                annotation.put("height", (int)chunk.getBbox().getHeight());
-                annotation.put("start", start);
-                int len = chunk.getText().length();
-                annotation.put("end", start + len);
-                start = start + len + 1;
-                jsonAnnotations.put(annotation);
-            }
-            jsonBlock.put("annotations", jsonAnnotations);
-            jsonBlocks.put(jsonBlock);
-        }
-        jsonPage.put("blocks",jsonBlocks);*/
-
+        //page.sortLines();
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
         jsonPage.put("number", page.getIndex());
         jsonPage.put("width", page.getWidth());
         jsonPage.put("height", page.getHeight());
-        for (TextChunk block: page.getOutsideTextLines()) {
+        TextChunk prev_line = null;
+        if (!page.getTextLines().isEmpty()) {
+            prev_line = page.getTextLines().get(0);
+        }
+        List<TextChunk> outsideTextLine = page.getOutsideTextLines();
+        for (TextChunk block: outsideTextLine) {
             JSONObject jsonBlock = new JSONObject();
             JSONArray jsonAnnotations = new JSONArray();
             jsonBlock.put("order", block.getId());
             jsonBlock.put("x_top_left", (int)block.getLeft());
             jsonBlock.put("y_top_left", (int)block.getTop());
             jsonBlock.put("width", (int)block.getWidth());
-            jsonBlock.put("height", (int)block.getHeight());
+            int height = (int)block.getHeight() < 0 ? 0: (int)block.getHeight();
+            jsonBlock.put("height", height);
             jsonBlock.put("text", block.getText());
+            jsonBlock.put("start", 0);
+            jsonBlock.put("end", block.getText().length() - 1);
             if (!block.getMetadata().equals("")) {
                 jsonBlock.put("metadata", block.getMetadata());
             } else {
                 jsonBlock.put("metadata", "unknown");
             }
-            //jsonBlock.put("is_bold", block.getFont().isBold());
-            //jsonBlock.put("is_italic", block.getFont().isItalic());
-            //jsonBlock.put("is_normal", block.getFont().isNormal());
-            //jsonBlock.put("font_name", block.getFont().getName());
-            //jsonBlock.put("font_size", (int)block.getFont().getFontSize());
+            jsonBlock.put("indent", (int) block.getLeft());
+            int spacing = (int) (block.getTop() - prev_line.getBottom());
+            if (spacing < 0) spacing = 0;
+            jsonBlock.put("spacing", spacing);
+            prev_line = block;
             int start = 0;
             for (TextChunk.TextLine chunk: block.getWords()){
                 JSONObject annotation = new JSONObject();

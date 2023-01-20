@@ -162,10 +162,6 @@ public class TextChunk extends PDFRectangle {
         return words;
     }
 
-    public List<TextLine> getTextLines() {
-        return textLines;
-    }
-
     public void addAllTextPositions(List<TextPosition> tp) {
         textPositions.addAll(tp);
     }
@@ -175,7 +171,7 @@ public class TextChunk extends PDFRectangle {
     }
 
     public String getMetadata() {
-        return metadata;
+        return metadata.toLowerCase();
     }
 
     public void setMetadata(String metadata) {
@@ -216,6 +212,10 @@ public class TextChunk extends PDFRectangle {
             setBbox(bbox);
             setFont(font);
         }
+    }
+
+    public void addLine(TextChunk line){
+
     }
 
     public boolean isModified() {

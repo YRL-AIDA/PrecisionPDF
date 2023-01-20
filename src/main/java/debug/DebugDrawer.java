@@ -27,18 +27,33 @@ import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.visible.PDFTemplateStructure;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;
 
 import java.awt.Color;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.tools.imageio.ImageIOUtil;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 public class DebugDrawer {
     private static final String SUFFIX_START_CHAR = "_";
@@ -55,7 +70,8 @@ public class DebugDrawer {
     private String rulingDirectoryName;
     private String borderedTableDirectoryName;
     private String recomposedDocumentDirectoryName;
-
+    private String textLinesDirectoryName;
+    private String textLinesFileNameSuffix;
     private String chunkFileNameSuffix;
     private String charFileNameSuffix;
     private String wordFileNameSuffix;
@@ -80,25 +96,16 @@ public class DebugDrawer {
         this.debugDirectoryPath = debugDirectoryPath;
     }
 
-    public void drawBeforeRecomposing() throws IOException {
+    public void drawBeforeRecomposing() throws IOException, ParserConfigurationException, TransformerException {
         drawChunks();
-        drawChars();
+        //drawChars();
         drawWords();
         drawBlocks();
         drawRulings();
         drawBorderedTables();
         drawProjections();
-        //drawSections();
+        drawTextLines();
     }
-
-/*    public void drawAfterRecomposing() throws IOException {
-        saveRecomposedDocument();
-        //drawWorkAreas();
-        //drawMultipageWorkAreas();
-        drawBorderedTables();
-        //drawNakedTables();
-        drawAllTables();
-    }*/
 
     private PDDocument getPDDocument() throws IOException {
         File file = document.getSourceFile();
@@ -137,7 +144,7 @@ public class DebugDrawer {
         drawer.drawString(s, chunk.getLeft(), chunk.getTop());
     }
 
-    private void drawChars() throws IOException {
+/*    private void drawChars() throws IOException {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, charDrawStyle);
 
@@ -155,20 +162,20 @@ public class DebugDrawer {
         String outFilePath = getOutputFilePath(charDirectoryName, charFileNameSuffix);
         pdDocument.save(outFilePath);
         pdDocument.close();
-    }
+    }*/
 
     private void drawChar(PageDrawer drawer, TextChunk character) throws IOException {
         drawer.drawRectangle(character.getLeft(), character.getTop(), character.getRight(), character.getBottom());
     }
 
-    private void drawWords() throws IOException {
+    private void drawWords() throws IOException, ParserConfigurationException, TransformerException {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, wordDrawStyle);
+        PDFRenderer pdfRenderer = new PDFRenderer(document.getPdDocument());
 
         for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
-
             PageDrawer drawer = builder.createPageDrawer(pageIndex);
             for (Iterator<TextChunk> words = page.getWords(); words.hasNext(); ) {
                 drawWord(drawer, words.next());
@@ -217,6 +224,33 @@ public class DebugDrawer {
         drawer.drawString("fs: " + font_size, block.getLeft(), block.getTop());
     }
 
+    private void drawTextLines() throws IOException {
+        PDDocument pdDocument = getPDDocument();
+        PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, blockDrawStyle);
+
+        for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
+            Page page = pages.next();
+            int pageIndex = page.getIndex();
+
+            PageDrawer drawer = builder.createPageDrawer(pageIndex);
+            for (TextChunk line: page.getTextLines()) {
+                drawTextLine(drawer, line);
+            }
+            drawer.close();
+        }
+
+        String outFilePath = getOutputFilePath(textLinesDirectoryName, textLinesFileNameSuffix);
+        pdDocument.save(outFilePath);
+        pdDocument.close();
+    }
+
+    private void drawTextLine(PageDrawer drawer, TextChunk block) throws IOException {
+        drawer.drawRectangle(block.getLeft(), block.getTop(), block.getRight(), block.getBottom());
+        String s = String.valueOf(block.getStartOrder());
+        //String font_size = String.valueOf(block.getFont().getFontSize());
+        drawer.drawString(s, block.getRight(), block.getBottom());
+        //drawer.drawString("fs: " + font_size, block.getLeft(), block.getTop());
+    }
 
     private void drawProjections() throws IOException {
         PDDocument pdDocument = getPDDocument();
@@ -250,18 +284,19 @@ public class DebugDrawer {
     }
 
     private void drawRulings() throws IOException {
+
         PDDocument pdDocument = getPDDocument();
-        PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, rulingDrawStyle);
+        DrawStyle ds1 = new DrawStyle.Builder().setStrokingColor(GREEN).setLineWidth(3f).createDrawStyle();
+        PageDrawer.Builder builder1 = new PageDrawer.Builder(pdDocument, ds1);
 
         for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
-            PageDrawer drawer = builder.createPageDrawer(pageIndex);
-            for (Iterator<Ruling> rulings = page.getBorderedTableRulings(); rulings.hasNext(); ) {
-                Ruling ruling = rulings.next();
-                if (ruling.getRenderingType() == Ruling.RenderingType.VISIBLE) {
-                    drawRuling(drawer, ruling);
-                }
+
+            PageDrawer drawer = builder1.createPageDrawer(pageIndex);
+            for (Iterator<Ruling> it = page.getBorderedTableRulings(); it.hasNext(); ) {
+                Ruling line = it.next();
+                drawRuling(drawer, line);
             }
             drawer.close();
         }
@@ -276,8 +311,7 @@ public class DebugDrawer {
         float y1 = ruling.getStartPoint().y;
         float x2 = ruling.getEndPoint().x;
         float y2 = ruling.getEndPoint().y;
-
-        drawer.drawLine(x1, y1, x2, y2);
+        drawer.drawLine(10, 10, 100, 100);
     }
 
    /* private void drawSections() throws IOException {
@@ -380,128 +414,6 @@ public class DebugDrawer {
         pdDocument.close();
     }
 
-/*    private void drawAllTables() throws IOException {
-
-        float lt, rt, tp, bm;
-        //PDDocument pdDocument = getPDDocument();
-
-        PDDocument pdDocument = PDDocument.load(new File(getOutputFilePath(recomposedDocumentDirectoryName, recomposedDocumentNameSuffix)));
-
-        DrawStyle ds1 = new DrawStyle.Builder().setLineWidth(1f).setStrokingColor(BLUE).createDrawStyle();
-        PageDrawer.Builder builder1 = new PageDrawer.Builder(pdDocument, ds1);
-
-        DrawStyle ds2 = new DrawStyle.Builder()
-                .setStrokingColor(BLUE)
-                .setLineWidth(3f)
-                .setNonStrokingColor(BLUE)
-                .createDrawStyle();
-
-        PageDrawer.Builder builder2 = new PageDrawer.Builder(pdDocument, ds2);
-
-        DrawStyle ds3 = new DrawStyle.Builder().setLineWidth(1f).setStrokingColor(GREEN).createDrawStyle();
-        PageDrawer.Builder builder3 = new PageDrawer.Builder(pdDocument, ds3);
-
-        DrawStyle ds4 = new DrawStyle.Builder().setStrokingColor(GREEN).setLineWidth(3f).createDrawStyle();
-        PageDrawer.Builder builder4 = new PageDrawer.Builder(pdDocument, ds4);
-
-        //DrawStyle ds5 = new DrawStyle.Builder().setStrokingColor(RED).setLineWidth(3f).createDrawStyle();
-        //PageDrawer.Builder builder5 = new PageDrawer.Builder(pdDocument, ds5);
-
-        DrawStyle ds6 = new DrawStyle.Builder().setNonStrokingColor(Color.WHITE).createDrawStyle();
-        PageDrawer.Builder builder6 = new PageDrawer.Builder(pdDocument, ds6);
-
-        for (Iterator<Section> sections = document.getSections(); sections.hasNext();) {
-            Section section = sections.next();
-
-            for (Iterator<WorkArea> workareas = section.getWorkAreas(); workareas.hasNext();) {
-                WorkArea area = workareas.next();
-
-                int pageIndex = area.getIndex();
-
-        *//*for (Iterator<Page> pages = document.getPages(); pages.hasNext(); ) {
-            Page page = pages.next();
-            int pageIndex = page.getIndex();*//*
-
-                PageDrawer drawer1 = builder1.createPageDrawer(pageIndex);
-                PageDrawer drawer2 = builder2.createPageDrawer(pageIndex);
-                PageDrawer drawer3 = builder3.createPageDrawer(pageIndex);
-                PageDrawer drawer4 = builder4.createPageDrawer(pageIndex);
-                //PageDrawer drawer5 = builder5.createPageDrawer(pageIndex);
-                PageDrawer drawer6 = builder6.createPageDrawer(pageIndex);
-
-           *//* for (Iterator<WorkArea> areas = page.getWorkAreas(); areas.hasNext();) {
-                WorkArea area = areas.next();*//*
-
-                // Draw naked tables
-                for (Iterator<Table> tableIterator = area.getNakedTables(); tableIterator.hasNext(); ) {
-                    Table table = tableIterator.next();
-                    lt = table.getLeft();
-                    tp = table.getTop();
-                    rt = table.getRight();
-                    bm = table.getBottom();
-
-                    drawer2.drawRectangle(lt, tp, rt, bm);
-                    //drawer2.fillRectangle(rt - 60f, tp - 10f, rt + 1.5f, tp);
-                    //drawer6.drawString("TEST", rt - 58f, tp + 2f);
-
-                    for (Iterator<Cell> cells = table.getCells(); cells.hasNext(); ) {
-                        Rectangle cell = cells.next();
-                        lt = cell.getLeft();
-                        tp = cell.getTop();
-                        rt = cell.getRight();
-                        bm = cell.getBottom();
-                        drawer1.drawRectangle(lt, tp, rt, bm);
-                    }
-                }
-
-                // Draw bordered tables
-                for (Iterator<Table> tableIterator = area.getTables(); tableIterator.hasNext(); ) {
-                    Table table = tableIterator.next();
-                    lt = table.getLeft();
-                    tp = table.getTop();
-                    rt = table.getRight();
-                    bm = table.getBottom();
-
-                    drawer4.drawRectangle(lt, tp, rt, bm);
-
-                    for (Iterator<Cell> cells = table.getCells(); cells.hasNext(); ) {
-                        Rectangle cell = cells.next();
-                        lt = cell.getLeft();
-                        tp = cell.getTop();
-                        rt = cell.getRight();
-                        bm = cell.getBottom();
-                        drawer3.drawRectangle(lt, tp, rt, bm);
-                    }
-                }
-
-                // Draw undefined tables
-                *//*
-                for (Iterator<Rectangle> tableAreaIterator = area.getPossibleTableAreas(); tableAreaIterator.hasNext(); ) {
-                    Rectangle table = tableAreaIterator.next();
-                    lt = table.getLeft();
-                    tp = table.getTop();
-                    rt = table.getRight();
-                    bm = table.getBottom();
-
-                    drawer5.drawRectangle(lt, tp, rt, bm);
-                }
-                *//*
-
-
-                drawer1.close();
-                drawer2.close();
-                drawer3.close();
-                drawer4.close();
-                //drawer5.close();
-                drawer6.close();
-            }
-        }*/
-
-/*        String outFilePath = getOutputFilePath(allTableDirectoryName, allTableFileNameSuffix);
-        pdDocument.save(outFilePath);
-        pdDocument.close();
-    }*/
-
     private String getOutputFilePath(String innerDirectoryName, String fileNameSuffix) {
         // Make the specified output directory
         if (null == innerDirectoryName) {
@@ -535,6 +447,7 @@ public class DebugDrawer {
         private String rulingDirectoryName;
         private String sectionDirectoryName;
         private String workAreaDirectoryName;
+        private String textLinesDirectoryName;
         private String borderedTableDirectoryName;
         private String nakedTableDirectoryName;
         private String allTableDirectoryName;
@@ -546,6 +459,8 @@ public class DebugDrawer {
         private String wordFileNameSuffix;
         private String blockFileNameSuffix;
         private String rulingFileNameSuffix;
+        private String textLinesFileNameSuffix;
+
         private String sectionFileNameSuffix;
         private String workAreaFileNameSuffix;
         private String borderedTableFileNameSuffix;
@@ -576,14 +491,14 @@ public class DebugDrawer {
             wordDrawStyle = builder.createDrawStyle();
             blockDrawStyle = builder.createDrawStyle();
 
-            builder.setStrokingColor(Color.BLUE).setLineWidth(0.5f);
-            rulingDrawStyle = builder.createDrawStyle();
-
             builder.setFontSize(12f);
             sectionDrawStyle = builder.createDrawStyle();
 
             builder.setStrokingColor(Color.RED).setLineWidth(1f);
             workAreaDrawStyle = builder.createDrawStyle();
+
+            builder.setStrokingColor(Color.BLUE).setLineWidth(3.5f);
+            rulingDrawStyle = builder.createDrawStyle();
         }
 
         public Builder(Path debugDirectoryPath) {
@@ -606,6 +521,11 @@ public class DebugDrawer {
 
         public Builder setCharDirectoryName(String directoryName) {
             charDirectoryName = directoryName;
+            return this;
+        }
+
+        public Builder setTextLinesDirectoryName(String directoryName) {
+            textLinesDirectoryName = directoryName;
             return this;
         }
 
@@ -661,6 +581,11 @@ public class DebugDrawer {
 
         public Builder setChunkFileNameSuffix(String fileNameSuffix) {
             chunkFileNameSuffix = fileNameSuffix;
+            return this;
+        }
+
+        public Builder setTextLinesFileNameSuffix(String fileNameSuffix) {
+            textLinesFileNameSuffix = fileNameSuffix;
             return this;
         }
 
@@ -764,6 +689,7 @@ public class DebugDrawer {
             drawer.rulingDirectoryName = this.rulingDirectoryName;
             drawer.borderedTableDirectoryName = this.borderedTableDirectoryName;
             drawer.recomposedDocumentDirectoryName = this.recomposedDocumentDirectoryName;
+            drawer.textLinesDirectoryName = this.textLinesDirectoryName;
 
             drawer.chunkFileNameSuffix = this.chunkFileNameSuffix;
             drawer.charFileNameSuffix = this.charFileNameSuffix;
@@ -772,6 +698,7 @@ public class DebugDrawer {
             drawer.rulingFileNameSuffix = this.rulingFileNameSuffix;
             drawer.borderedTableFileNameSuffix = this.borderedTableFileNameSuffix;
             drawer.recomposedDocumentNameSuffix = this.recomposedDocumentNameSuffix;
+            drawer.textLinesFileNameSuffix = this.textLinesFileNameSuffix;
 
             drawer.chunkDrawStyle = this.chunkDrawStyle;
             drawer.charDrawStyle = this.charDrawStyle;

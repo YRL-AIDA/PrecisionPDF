@@ -7,9 +7,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
 
 public class Page extends PDFRectangle {
@@ -22,7 +20,7 @@ public class Page extends PDFRectangle {
 
     // Text content
     private final java.util.List<TextChunk> chunks; // Original text chunks extracted from a PDF document
-    private final java.util.List<TextChunk> chars;  // Characters extracted from original PDF chunks
+    //private final java.util.List<TextChunk> chars;  // Characters extracted from original PDF chunks
     private final java.util.List<TextChunk> words;  // Words composed from characters
     private final java.util.List<TextChunk> lines;  // Text lines composed from characters
     private final java.util.List<TextChunk> blocks; // Text blocks composed from words
@@ -41,7 +39,7 @@ public class Page extends PDFRectangle {
     // Initialization
     {
         chunks = new ArrayList<>();
-        chars  = new ArrayList<>();
+        //chars  = new ArrayList<>();
         words  = new ArrayList<>();
         lines  = new ArrayList<>();
         blocks = new ArrayList<>();
@@ -114,9 +112,11 @@ public class Page extends PDFRectangle {
         return this.chunks.addAll(chunks);
     }
 
+/*
     public boolean addChars(List<TextChunk> chars) {
         return this.chars.addAll(chars);
     }
+*/
 
     public boolean addWords(List<TextChunk> words) {
         return this.words.addAll(words);
@@ -132,7 +132,7 @@ public class Page extends PDFRectangle {
 
     public boolean addVisibleRulings(List<Ruling> visibleRulings) {
         this.visibleRulings.clear();
-        boolean result = visibleRulings == null ? false : this.visibleRulings.addAll(rulings);
+        boolean result = visibleRulings == null ? false : this.visibleRulings.addAll(visibleRulings);
         //categorizeRulingLines();
         //joinRulingLines();
         return result;
@@ -150,13 +150,19 @@ public class Page extends PDFRectangle {
         return this.lines.addAll(lines);
     }
 
+    public void sortLines(){
+        lines.sort((o1, o2) -> java.lang.Double.compare(o1.getTop(), o2.getTop()));
+    }
+
+
     public Iterator<TextChunk> getChunks() {
         return chunks.iterator();
     }
 
-    public Iterator<TextChunk> getChars() {
+
+/*    public Iterator<TextChunk> getChars() {
         return chars.iterator();
-    }
+    }*/
 
     public Iterator<TextChunk> getWords() {
         return words.iterator();
@@ -178,8 +184,8 @@ public class Page extends PDFRectangle {
         return rulings.iterator();
     }
 
-
     public List<Table> getTables(){
+        Collections.sort(tables, (t1, t2) -> {return  (int) (t1.getTop() - t2.getTop());});
         return tables;
     }
 
@@ -245,10 +251,14 @@ public class Page extends PDFRectangle {
         List<TextChunk> result = new ArrayList<>();
         if (tables.isEmpty()) return lines;
         for (TextChunk block: lines) {
+            boolean canAdd = true;
             for (Table table: tables) {
-                if (!block.intersects(table) && !result.contains(block)) {
-                    result.add(block);
+                if (block.intersects(table) || result.contains(block)) {
+                    canAdd = false;
                 }
+            }
+            if (canAdd) {
+                result.add(block);
             }
         }
         return result;

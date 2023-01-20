@@ -28,7 +28,10 @@ import javax.xml.transform.TransformerException;
 
 
 public class DedocTableExtractor {
-
+    static {
+        System.setProperty("org.apache.commons.logging.Log",
+                "org.apache.commons.logging.impl.NoOpLog");
+    }
     // CLI params
     @Option(name = "-i", aliases = {"--input"}, required = true, metaVar = "PATH", usage = "specify a file")
     private String inArg;
@@ -48,10 +51,13 @@ public class DedocTableExtractor {
     private String ePage;
     private int endPage;
 
+    @Option(name = "-d", aliases = {"--debug"}, usage = "allow debug output")
+    private boolean debug = false;
     @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
     private boolean help = false;
 
     public static void main(String[] args) {
+        System.getProperties().put("org.apache.commons.logging.simplelog.defaultlog","fatal");
         new DedocTableExtractor().run(args);
     }
 
@@ -105,13 +111,16 @@ public class DedocTableExtractor {
 
         } catch (CmdLineException | IOException e) {
             e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException(e);
+        } catch (TransformerException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public void extract(Path path, int startPage, int endPage) throws IOException {
+    public void extract(Path path, int startPage, int endPage) throws IOException, ParserConfigurationException, TransformerException {
 
         Document document = null;
-        DebugDrawer debugDrawer = null;
 
         document = Document.load(path, startPage, endPage);
         int lastPageIndex = document.getPageCnt();
@@ -131,34 +140,15 @@ public class DedocTableExtractor {
                 table.removeEmptyRows();
             }
         }
-
-        writeTables(document);
-        printJSON(document, startPage, endPage);
-
-        /*        Path debugDirPath = outputPath.resolve("debug");
-        DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
-                .setChunkDirectoryName("Chunks")
-                .setChunkFileNameSuffix("CHUNKS")
-                .setCharDirectoryName("Chars")
-                .setCharFileNameSuffix("CHARS")
-                .setWordDirectoryName("Words")
-                .setWordFileNameSuffix("WORDS")
-                .setBlockDirectoryName("Blocks")
-                .setBlockFileNameSuffix("BLOCKS")
-                .setRulingDirectoryName("Rulings")
-                .setRulingFileNameSuffix("RULINGS")
-                .setBorderedTableDirectoryName("BorderedTables")
-                .setBorderedTableFileNameSuffix("BORDERED");
-
-        debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
-        debugDrawer.drawBeforeRecomposing();*/
-
+        if (debug) {
+            writeTables(document);
+            drawDebug(document);
+        }
     }
 
 
-    public void extract(Path path) throws IOException {
+    public void extract(Path path) throws IOException, ParserConfigurationException, TransformerException {
         Document document = null;
-        DebugDrawer debugDrawer = null;
         PDDocument pdDocument = Loader.loadPDF(path.toFile());
         document = Document.load(path, 0, pdDocument.getPages().getCount() - 1);
 
@@ -167,6 +157,7 @@ public class DedocTableExtractor {
 
         ExtractionManager em = new ExtractionManager(document);
         List<Table> tables = em.extract();
+
         if (tables != null) {
             for (Table table: tables) {
                 table.splitCells();
@@ -175,7 +166,18 @@ public class DedocTableExtractor {
             }
         }
 
-/*        Path debugDirPath = outputPath.resolve("debug");
+        printJSON(document);
+
+        if (debug) {
+            drawDebug(document);
+            writeTables(document);
+        }
+    }
+
+    private void drawDebug(Document document) throws IOException, ParserConfigurationException, TransformerException {
+        DebugDrawer debugDrawer = null;
+        Path debugDirPath = outputPath.resolve("debug");
+
         DebugDrawer.Builder debugDrawerBuilder = new DebugDrawer.Builder(debugDirPath)
                 .setChunkDirectoryName("Chunks")
                 .setChunkFileNameSuffix("CHUNKS")
@@ -188,13 +190,12 @@ public class DedocTableExtractor {
                 .setRulingDirectoryName("Rulings")
                 .setRulingFileNameSuffix("RULINGS")
                 .setBorderedTableDirectoryName("BorderedTables")
-                .setBorderedTableFileNameSuffix("BORDERED");
+                .setBorderedTableFileNameSuffix("BORDERED")
+                .setTextLinesDirectoryName("TextLines")
+                .setTextLinesFileNameSuffix("TEXTLINES");
 
         debugDrawer = debugDrawerBuilder.createDebugDrawer(document);
         debugDrawer.drawBeforeRecomposing();
-
-        writeTables(document);*/
-        printJSON(document);
     }
 
     private void printJSON(Document document) {

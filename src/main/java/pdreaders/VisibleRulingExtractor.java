@@ -20,12 +20,15 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
 import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import utils.Utils;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriter;
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -39,8 +42,7 @@ public class VisibleRulingExtractor {
     private static final int VERTICAL_EDGE_HEIGHT_MINIMUM = 10;
     private static final int HORIZONTAL_EDGE_WIDTH_MINIMUM = 50;
     private static final int EXPAND_AMOUNT = 1;
-    private PDStream newContents;
-    PDFRenderer renderer;
+
     private final PDDocument pdDocument;
     private final List<Ruling> visibleRulings;
 
@@ -51,34 +53,30 @@ public class VisibleRulingExtractor {
     public VisibleRulingExtractor(PDDocument pdDocument) {
         this.pdDocument = pdDocument;
         visibleRulings = new ArrayList<>(200);
-        newContents = new PDStream(pdDocument);
-        renderer = new PDFRenderer(pdDocument);
-
-    }
-
-    public void setStartPage(int startPage) {
-        //super.setStartPage
     }
 
     public void process(Page page) throws IOException {
+
         release();
+
         BufferedImage image;
-        PDPage pdPage = pdDocument.importPage(page.getPDPage());
+        PDPage pdPage = page.getPDPage();
+
         List<Object> newTokens = createTokensWithoutText(pdPage);
+        PDStream newContents = new PDStream(pdDocument);
         writeTokensToStream(newContents, newTokens);
         pdPage.setContents(newContents);
         PDResources resources = pdPage.getResources();
-
         if (resources != null) {
             processResources(resources);
             removeAllImages(resources);
         }
-
-        image = renderer.renderImageWithDPI(page.getIndex(),144, ImageType.GRAY);
-        //Utils.convertPageToImage(pdPage, 144, ImageType.GRAY);
-
+        image = Utils.convertPageToImage(pdPage, 144, ImageType.GRAY);
+        //File outputfile = new File("/home/sunveil/pages/"+page.getIndex()+"saved.png");
+        //ImageIO.write(image, "png", outputfile);
         List<Ruling> horizontalRulings = getHorizontalRulings(image);
         List<Ruling> verticalRulings = getVerticalRulings(image);
+
         List<Ruling> allEdges = new ArrayList<>(horizontalRulings);
         allEdges.addAll(verticalRulings);
 
@@ -86,11 +84,10 @@ public class VisibleRulingExtractor {
             Utils.snapPoints(allEdges, Utils.POINT_SNAP_DISTANCE_THRESHOLD, Utils.POINT_SNAP_DISTANCE_THRESHOLD);
 
             for (List<Ruling> rulings : Arrays.asList(horizontalRulings, verticalRulings)) {
-
                 for (Iterator<Ruling> iterator = rulings.iterator(); iterator.hasNext(); ) {
                     Ruling ruling = iterator.next();
-                    ruling.normalize();
 
+                    ruling.normalize();
                     if (ruling.oblique()) {
                         iterator.remove();
                     }
@@ -101,9 +98,7 @@ public class VisibleRulingExtractor {
             verticalRulings = Utils.collapseOrientedRulings(verticalRulings, 5);
 
             visibleRulings.clear();
-
             if (horizontalRulings != null) {
-
                 for (Ruling ruling: horizontalRulings) {
                     float x1 = ruling.x1 / 2;
                     float x2 = ruling.x2 / 2;
@@ -113,7 +108,6 @@ public class VisibleRulingExtractor {
                 }
                 visibleRulings.addAll(horizontalRulings);
             }
-
             if (verticalRulings != null) {
                 for (Ruling ruling: verticalRulings) {
                     float x1 = ruling.x1 / 2;
@@ -129,15 +123,18 @@ public class VisibleRulingExtractor {
     }
 
     private void removeAllImages(PDResources resources) throws IOException {
-
         for (COSName objectName: resources.getXObjectNames()) {
             PDXObject xObject = resources.getXObject(objectName);
-
             if (xObject != null && xObject instanceof PDImageXObject) {
+
                 PDImageXObject image = (PDImageXObject) xObject;
                 COSStream cosStream = image.getCOSObject();
-                image.setHeight(1);
-                image.setWidth(1);
+                //image.setHeight(1);
+                //image.setWidth(1);
+                //deleteObjects(cosStream);
+/*                if (cosStream != null) {
+                    cosStream.clear();
+                }*/
             }
         }
     }
@@ -179,7 +176,6 @@ public class VisibleRulingExtractor {
 
     private static void writeTokensToStream(PDStream newContents, List<Object> newTokens) throws IOException {
         if (newContents != null) {
-
             try (OutputStream out = newContents.createOutputStream(COSName.FLATE_DECODE)) {
                 ContentStreamWriter writer = new ContentStreamWriter(out);
                 writer.writeTokens(newTokens);
@@ -195,19 +191,21 @@ public class VisibleRulingExtractor {
         List<Object> newTokens = new ArrayList<>();
 
         while (token != null) {
-
             if (token instanceof Operator) {
                 Operator operation = (Operator) token;
-
                 if ("TJ".equals(operation.getName())
                         || "Tj".equals(operation.getName())
                         || "'".equals(operation.getName())
-                        || "\"".equals(operation.getName()))
+                        || "\"".equals(operation.getName())
+                        || "Do".equals(operation.getName()))
                 {
                     newTokens.remove(newTokens.size() - 1);
                     token = parser.parseNextToken();
                     continue;
                 }
+            }
+            if (token != null && token instanceof PDImageXObject) {
+                System.out.println("as");
             }
             newTokens.add(token);
             token = parser.parseNextToken();
@@ -224,17 +222,17 @@ public class VisibleRulingExtractor {
         int height = r.getHeight();
 
         for (int x = 0; x < width; x++) {
+
             int[] lastPixel = r.getPixel(x, 0, (int[]) null);
 
             for (int y = 1; y < height - 1; y++) {
-                int[] currPixel = r.getPixel(x, y, (int[]) null);
-                int diff = Math.abs(currPixel[0] - lastPixel[0]);
 
+                int[] currPixel = r.getPixel(x, y, (int[]) null);
+
+                int diff = Math.abs(currPixel[0] - lastPixel[0]);
                 if (diff > GRAYSCALE_INTENSITY_THRESHOLD) {
                     boolean alreadyChecked = false;
-
                     for (Ruling line : horizontalRulings) {
-
                         if (y == line.getP1().getY()
                                 && x >= line.getP1().getX()
                                 && x <= line.getP2().getX()) {
@@ -261,7 +259,6 @@ public class VisibleRulingExtractor {
                     }
                     int endX = lineX - 1;
                     int lineWidth = endX - x;
-
                     if (lineWidth > HORIZONTAL_EDGE_WIDTH_MINIMUM) {
                         horizontalRulings.add(new Ruling(new Point2D.Float(x, y), new Point2D.Float(endX, y)));
                     }
