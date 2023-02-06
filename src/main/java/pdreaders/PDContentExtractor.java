@@ -255,7 +255,13 @@ public class PDContentExtractor extends PDFTextStripper {
         RenderingMode rm = renderingMode.get(textPosition);
         if (rm == RenderingMode.FILL || rm == RenderingMode.NEITHER) {
             PDColor pdColor = nonStrokingColor.get(textPosition);
-            return new Color(pdColor.toRGB());
+            Color color;
+            try {
+                color = new Color(pdColor.toRGB());
+            } catch (UnsupportedOperationException e) {
+                color = new Color(0);
+            }
+            return color;
         }
         if (rm == RenderingMode.STROKE) {
             PDColor pdColor = strokingColor.get(textPosition);
