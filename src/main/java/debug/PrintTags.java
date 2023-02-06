@@ -30,7 +30,6 @@ public class PrintTags extends PDFStreamEngine {
         addOperator(new Restore());
         addOperator(new SetMatrix());
         addOperator(new BeginMarkedContent());
-        //addOperator(new BeginMarkedContentSequence());
     }
 
     protected void processOperator(Operator operator, List<COSBase> operands) throws IOException {

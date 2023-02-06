@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class TextLine extends TextChunk{
+
+    private String metadata;
     public TextLine(double left, double top, double right, double bottom, String text, Page page) {
         super(left, top, right, bottom, text, page);
     }

@@ -183,6 +183,8 @@ public class TextChunk extends PDFRectangle {
         private PDFRectangle bbox;
         private PDFFont font;
 
+        private String metadata = "";
+
         public String getText() {
             return text;
         }
@@ -205,6 +207,14 @@ public class TextChunk extends PDFRectangle {
 
         public void setBbox(PDFRectangle bbox) {
             this.bbox = bbox;
+        }
+
+        public void setMetadata(String metadata) {
+            this.metadata = metadata;
+        }
+
+        public String getMetadata(){
+            return metadata;
         }
 
         private TextLine(String text, PDFRectangle bbox, PDFFont font) {

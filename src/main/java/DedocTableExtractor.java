@@ -140,6 +140,9 @@ public class DedocTableExtractor {
                 table.removeEmptyRows();
             }
         }
+
+        printJSON(document);
+
         if (debug) {
             writeTables(document);
             drawDebug(document);

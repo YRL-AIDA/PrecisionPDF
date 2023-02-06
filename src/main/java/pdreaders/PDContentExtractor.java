@@ -61,7 +61,7 @@ public class PDContentExtractor extends PDFTextStripper {
         this.document = document;
         //this.setShouldSeparateByBeads(false);
         //this.setSortByPosition(true);
-        this.setSuppressDuplicateOverlappingText(true);
+        //this.setSuppressDuplicateOverlappingText(true);
         chunks = new ArrayList<>(500);
         chars = new ArrayList<>(5000);
         words = new ArrayList<>(1000);

@@ -91,6 +91,11 @@ public class JsonDocumentWriter {
             int start = 0;
             for (TextChunk.TextLine chunk: block.getWords()){
                 JSONObject annotation = new JSONObject();
+                if (!chunk.getMetadata().equals("")) {
+                    annotation.put("metadata", chunk.getMetadata());
+                } else {
+                    annotation.put("metadata", "unknown");
+                }
                 annotation.put("text", chunk.getText());
                 annotation.put("is_bold", chunk.getFont().isBold());
                 annotation.put("is_italic", chunk.getFont().isItalic());

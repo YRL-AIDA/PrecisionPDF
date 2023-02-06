@@ -84,6 +84,7 @@ public class Document implements Closeable {
                 PDDocument pdDocument = Loader.loadPDF(path.toFile());
                 Document document = new Document(file, pdDocument, startPage, endPage, pdDocument.getNumberOfPages());
                 document.parseTags();
+                document.extractLines();
                 document.annotateLines();
                 pdDocument.close();
                 return document;
@@ -142,11 +143,17 @@ public class Document implements Closeable {
             }
             */
             contentExtractor.process(page);
-            visibleRulingExtractor.process(page);
-
+            // Move to extractLines method
+            //visibleRulingExtractor.process(page);
             return page;
         }
         return null;
+    }
+
+    public void extractLines() throws IOException {
+        for (Page page: pages) {
+            visibleRulingExtractor.process(page);
+        }
     }
 
     public PDDocument getPdDocument() {
@@ -181,6 +188,11 @@ public class Document implements Closeable {
                 for (TextChunk line : page.getTextLines()) {
                     if (line.intersects(tag.getRect())) {
                         line.setMetadata(tag.getName().toString());
+                    }
+                    for (TextChunk.TextLine word: line.getWords()) {
+                        if (word.getBbox().intersects(tag.getRect())) {
+                            word.setMetadata(tag.getName().toString());
+                        }
                     }
                 }
             }
@@ -296,6 +308,9 @@ public class Document implements Closeable {
                 } else if (structType.equals("RunningTitle")) {
                     Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(), (float)page.getBBox().getHeight() - (float)box.getMaxY(), (float)box.getWidth(), (float)box.getHeight());
                     p.addTag(new Tag(TagsName.PAGE_ID, rec));
+                } else if (structType.equals("Link")) {
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(), (float) page.getBBox().getHeight() - (float) box.getMaxY(), (float) box.getWidth(), (float) box.getHeight());
+                    p.addTag(new Tag(TagsName.LINK, rec));
                 }
             }
         }
@@ -314,7 +329,6 @@ public class Document implements Closeable {
 
                 int[] codes = textPosition.getCharacterCodes();
                 if (codes.length != 1) {
-                    //System.out.printf("<!-- text position with unexpected number of codes: %d -->", codes.length);
                 } else {
                     box = union(box, calculateGlyphBounds(textPosition.getTextMatrix(), textPosition.getFont(), codes[0]).getBounds2D());
                 }
@@ -322,10 +336,8 @@ public class Document implements Closeable {
                 PDMarkedContent thisMarkedContent = (PDMarkedContent) object;
                 box = union(box, showContent(thisMarkedContent.getMCID(), theseMarkedContents));
             } else {
-                textContent.append("?" + object);
             }
         }
-        //System.out.printf("%s\n", textContent);
         return box;
     }
 
@@ -350,7 +362,7 @@ public class Document implements Closeable {
     }
 
     Map<PDPage, Rectangle2D> union(Map<PDPage, Rectangle2D> map, PDPage page, Rectangle2D rectangle) {
-        if (map == null) {
+       if (map == null) {
             map = new HashMap<>();
         }
         map.put(page, union(map.get(page), rectangle));
