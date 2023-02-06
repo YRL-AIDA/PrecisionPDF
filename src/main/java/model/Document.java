@@ -1,12 +1,10 @@
 package model;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDMarkedContentReference;
@@ -17,37 +15,20 @@ import org.apache.pdfbox.pdmodel.font.*;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFMarkedContentExtractor;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;
-import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.apache.pdfbox.util.Matrix;
-import org.apache.tools.ant.taskdefs.Manifest;
-import org.w3c.dom.Element;
 import pdreaders.PDContentExtractor;
 import pdreaders.VisibleRulingExtractor;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
@@ -186,11 +167,11 @@ public class Document implements Closeable {
         for (Page page: pages) {
             for (Tag tag: page.getTags()) {
                 for (TextChunk line : page.getTextLines()) {
-                    if (line.intersects(tag.getRect())) {
+                    if (line.intersects(tag.getRect()) && !tag.getName().toString().equals("LINK")) {
                         line.setMetadata(tag.getName().toString());
                     }
                     for (TextChunk.TextLine word: line.getWords()) {
-                        if (word.getBbox().intersects(tag.getRect())) {
+                        if (word.getBbox().intersects(tag.getRect()) && tag.getName().toString().equals("LINK")) {
                             word.setMetadata(tag.getName().toString());
                         }
                     }
@@ -303,13 +284,19 @@ public class Document implements Closeable {
                 }
 
                 if (structType.equals("Footnote")) {
-                    Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(), (float)page.getBBox().getHeight() - (float)box.getMaxY(), (float)box.getWidth(), (float)box.getHeight());
+                    Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(),
+                            (float)page.getBBox().getHeight() - (float)box.getMaxY(),
+                            (float)box.getWidth(), (float)box.getHeight());
                     p.addTag(new Tag(TagsName.FOOTNOTE, rec));
                 } else if (structType.equals("RunningTitle")) {
-                    Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(), (float)page.getBBox().getHeight() - (float)box.getMaxY(), (float)box.getWidth(), (float)box.getHeight());
+                    Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(),
+                            (float)page.getBBox().getHeight() - (float)box.getMaxY(),
+                            (float)box.getWidth(), (float)box.getHeight());
                     p.addTag(new Tag(TagsName.PAGE_ID, rec));
                 } else if (structType.equals("Link")) {
-                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(), (float) page.getBBox().getHeight() - (float) box.getMaxY(), (float) box.getWidth(), (float) box.getHeight());
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
+                            (float) page.getBBox().getHeight() - (float) box.getMaxY(),
+                            (float) box.getWidth(), (float) box.getHeight());
                     p.addTag(new Tag(TagsName.LINK, rec));
                 }
             }
