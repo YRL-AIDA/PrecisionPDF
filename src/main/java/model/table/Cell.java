@@ -24,8 +24,10 @@ public class Cell extends PDFRectangle {
         super(bbox.getLeft(), bbox.getTop(), bbox.getRight(), bbox.getBottom());
         this.contentBlocks = contentBlocks;
         this.order = Integer.MIN_VALUE;
-        for (TextChunk chunk: contentBlocks) {
-            this.order = Math.max(this.order, chunk.getEndOrder());
+        if (contentBlocks != null) {
+            for (TextChunk chunk : contentBlocks) {
+                this.order = Math.max(this.order, chunk.getEndOrder());
+            }
         }
         assert (cl >= 0);
         this.cl = cl;
