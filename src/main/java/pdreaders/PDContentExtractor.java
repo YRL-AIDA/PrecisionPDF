@@ -359,6 +359,9 @@ public class PDContentExtractor extends PDFTextStripper {
 
         for (TextPosition tp: textPositions) {
             String text = tp.getUnicode();
+            if (tp.getUnicode().equals("\uF0B7")){
+                text = "•";
+            }
             if (text == null || text.isEmpty()) continue;
             if (containsWhitespace(text)) continue;
 

@@ -69,7 +69,7 @@ public class JsonDocumentWriter {
         for (TextChunk block: outsideTextLine) {
             JSONObject jsonBlock = new JSONObject();
             JSONArray jsonAnnotations = new JSONArray();
-            jsonBlock.put("order", block.getId());
+            jsonBlock.put("order", 10000 * (page.getIndex()+1) + block.getId());
             jsonBlock.put("x_top_left", (int)block.getLeft());
             jsonBlock.put("y_top_left", (int)block.getTop());
             jsonBlock.put("width", (int)block.getWidth());
@@ -122,6 +122,7 @@ public class JsonDocumentWriter {
             jsonTable.put("y_top_left", (int)table.getTop());
             jsonTable.put("width", (int)table.getWidth());
             jsonTable.put("height", (int)table.getHeight());
+            jsonTable.put("order", (int)10000 * (page.getIndex()+1) + table.getOrder());
             JSONArray jsonRows = new JSONArray();
             for (int i = 0; i < table.getNumOfRows(); i++) {
                 JSONArray jsonRow = new JSONArray();

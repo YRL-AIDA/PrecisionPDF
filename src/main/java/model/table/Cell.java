@@ -16,13 +16,17 @@ public class Cell extends PDFRectangle {
     private int rt; // Top row index
     private int cr; // Right column index
     private int rb; // Bottom row index
+    private int order;
 
     private final List<TextChunk> contentBlocks;
 
     public Cell(PDFRectangle bbox, List<TextChunk> contentBlocks, int cl, int rt, int cr, int rb) {
         super(bbox.getLeft(), bbox.getTop(), bbox.getRight(), bbox.getBottom());
         this.contentBlocks = contentBlocks;
-
+        this.order = Integer.MIN_VALUE;
+        for (TextChunk chunk: contentBlocks) {
+            this.order = Math.max(this.order, chunk.getEndOrder());
+        }
         assert (cl >= 0);
         this.cl = cl;
         assert (rt >= 0);
@@ -31,6 +35,10 @@ public class Cell extends PDFRectangle {
         this.cr = cr;
         assert (rb >= rt);
         this.rb = rb;
+    }
+
+    public int getOrder() {
+        return this.order;
     }
 
     private PDFRectangle getBBox() {

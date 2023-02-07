@@ -13,6 +13,7 @@ public class Table extends PDFRectangle {
     private final List<Row> rows;
     private int pageIndex;
     private int numOfPages;
+    private int order;
     private boolean combined;  // true, if the table was created by combining several other tables
     //private boolean bordered;  // true, if the table is extracted by bordered table extractor
     private boolean continued; // true, if the table was used to create a combined table
@@ -46,6 +47,7 @@ public class Table extends PDFRectangle {
     public Table(double left, double top, double right, double bottom, TableType type) {
         super(left, top, right, bottom);
         this.type = type;
+        this.order = Integer.MIN_VALUE;
     }
 
     public String getCode() {
@@ -61,6 +63,7 @@ public class Table extends PDFRectangle {
     }
 
     public void addCell(Cell cell, int rowId) {
+        this.order = Math.max(this.order, cell.getOrder());
         if (rows.size() < rowId + 1) {
             for (int i = rows.size(); i < rowId + 1; i++) {
                 rows.add(new Row(rowId));
@@ -69,6 +72,10 @@ public class Table extends PDFRectangle {
         rows.get(rowId).addCell(cell);
 
         cells.add(cell); // I added this code to read cells in the draw debugging (A. Shigarov)
+    }
+
+    public int getOrder() {
+        return this.order;
     }
 
     public int getNumOfRows() {
