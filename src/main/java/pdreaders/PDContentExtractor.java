@@ -359,6 +359,7 @@ public class PDContentExtractor extends PDFTextStripper {
 
         for (TextPosition tp: textPositions) {
             String text = tp.getUnicode();
+            //ToDO: Fix it. Embedded fonts
             if (tp.getUnicode().equals("\uF0B7")){
                 text = "•";
             }
