@@ -37,6 +37,10 @@ public class PDFImage {
         return this.page;
     }
 
+    public PDImageXObject getImage() {
+        return this.image;
+    }
+
     /*
     public Rectangle2D.Float getBBox(){
         this.image.get

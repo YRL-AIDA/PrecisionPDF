@@ -4,7 +4,6 @@ import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.*;
-import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDNameTreeNode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
@@ -21,7 +20,6 @@ import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
-import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
 import pdreaders.PDContentExtractor;
@@ -48,6 +46,7 @@ public class Document implements Closeable {
     private int index = 0;
     private int pageCnt = 0;
     Map<PDPage, Page> taggedPages = new HashMap<>();
+
 
     @Override
     public void close() throws IOException {
@@ -190,7 +189,6 @@ public class Document implements Closeable {
     }
 
     public void extractImages() throws IOException {
-        ArrayList<PDFImage> result = new ArrayList<>();
         for (Page page: getPages()) {
             PDResources pdResources = page.getPDPage().getResources();
             int i = 1;
@@ -198,6 +196,7 @@ public class Document implements Closeable {
                 PDXObject o = pdResources.getXObject(name);
                 if (o instanceof PDImageXObject) {
                     PDImageXObject image = (PDImageXObject)o;
+                    COSStream srt = image.getCOSObject();
                     PDFImage pdfImage = new PDFImage(image, page, this.sourceFile.getParent());
                     page.addImage(pdfImage);
                     i++;
@@ -296,25 +295,19 @@ public class Document implements Closeable {
 
     private static PDEmbeddedFile getEmbeddedFile(PDComplexFileSpecification fileSpec )
     {
-        // search for the first available alternative of the embedded file
         PDEmbeddedFile embeddedFile = null;
-        if (fileSpec != null)
-        {
+        if (fileSpec != null) {
             embeddedFile = fileSpec.getEmbeddedFileUnicode();
-            if (embeddedFile == null)
-            {
+            if (embeddedFile == null) {
                 embeddedFile = fileSpec.getEmbeddedFileDos();
             }
-            if (embeddedFile == null)
-            {
+            if (embeddedFile == null) {
                 embeddedFile = fileSpec.getEmbeddedFileMac();
             }
-            if (embeddedFile == null)
-            {
+            if (embeddedFile == null) {
                 embeddedFile = fileSpec.getEmbeddedFileUnix();
             }
-            if (embeddedFile == null)
-            {
+            if (embeddedFile == null) {
                 embeddedFile = fileSpec.getEmbeddedFile();
             }
         }

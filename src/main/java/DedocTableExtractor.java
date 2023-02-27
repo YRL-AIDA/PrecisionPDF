@@ -4,16 +4,13 @@ import java.nio.file.*;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
 import debug.DebugDrawer;
 import exceptions.EmptyArgumentException;
 import extractors.BlockComposer;
 import extractors.ExtractionManager;
-import extractors.filters.YInterLineSpaceCompositionFilter;
 import model.Document;
 import model.Page;
 import model.table.Table;
-import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -22,7 +19,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import writers.HtmlTableWriter;
 import writers.JsonDocumentWriter;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 

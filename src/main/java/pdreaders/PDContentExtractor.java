@@ -182,7 +182,6 @@ public class PDContentExtractor extends PDFTextStripper {
     private final Map<TextPosition, PDColor> nonStrokingColor = new HashMap<>();
 
     @Override
-    @SuppressWarnings("fallthrough")
     protected void processTextPosition(TextPosition text) {
         renderingMode.put(text, getGraphicsState().getTextState().getRenderingMode());
         strokingColor.put(text, getGraphicsState().getStrokingColor());
