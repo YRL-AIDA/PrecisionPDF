@@ -22,6 +22,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationFileAttachment;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
+import pdreaders.ImageExtractor;
 import pdreaders.PDContentExtractor;
 import pdreaders.VisibleRulingExtractor;
 import java.awt.*;
@@ -43,6 +44,8 @@ public class Document implements Closeable {
     private final List<Page> pages = new ArrayList<>();
     private final PDContentExtractor contentExtractor;
     private final VisibleRulingExtractor visibleRulingExtractor;
+
+    private final ImageExtractor imageExtractor;
     private int index = 0;
     private int pageCnt = 0;
     Map<PDPage, Page> taggedPages = new HashMap<>();
@@ -70,7 +73,7 @@ public class Document implements Closeable {
             if (file.exists() && file.canRead()) {
                 PDDocument pdDocument = Loader.loadPDF(path.toFile());
                 Document document = new Document(file, pdDocument, startPage, endPage, pdDocument.getNumberOfPages());
-                document.extractImages();
+                //document.extractImages();
                 //document.extractAttachments(path);
                 document.parseTags();
                 document.extractLines();
@@ -92,6 +95,7 @@ public class Document implements Closeable {
             this.pdDocument = pdDocument;
             contentExtractor = new PDContentExtractor(this.pdDocument);
             visibleRulingExtractor = new VisibleRulingExtractor(this.pdDocument);
+            imageExtractor = new ImageExtractor(this.pdDocument, this.sourceFile);
         }
         createPages(startPage, endPage);
     }
@@ -132,6 +136,7 @@ public class Document implements Closeable {
             }
             */
             contentExtractor.process(page);
+            imageExtractor.process(page);
             // Move to extractLines method
             //visibleRulingExtractor.process(page);
             return page;
@@ -197,8 +202,8 @@ public class Document implements Closeable {
                 if (o instanceof PDImageXObject) {
                     PDImageXObject image = (PDImageXObject)o;
                     COSStream srt = image.getCOSObject();
-                    PDFImage pdfImage = new PDFImage(image, page, this.sourceFile.getParent());
-                    page.addImage(pdfImage);
+                    //PDFImage pdfImage = new PDFImage(image, page, this.sourceFile.getParent());
+                    //page.addImage(pdfImage);
                     i++;
                 }
             }

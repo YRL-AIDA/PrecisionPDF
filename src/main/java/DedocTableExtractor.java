@@ -197,12 +197,12 @@ public class DedocTableExtractor {
         debugDrawer.drawBeforeRecomposing();
     }
 
-    private void printJSON(Document document) {
+    private void printJSON(Document document) throws IOException {
         JsonDocumentWriter writer = new JsonDocumentWriter(document);
         System.out.println(writer.write());
     }
 
-    private void printJSON(Document document, int startPage, int endPage) {
+    private void printJSON(Document document, int startPage, int endPage) throws IOException {
         JsonDocumentWriter writer = new JsonDocumentWriter(document, startPage, endPage);
         System.out.println(writer.write());
     }

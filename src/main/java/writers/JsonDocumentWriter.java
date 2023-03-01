@@ -10,6 +10,7 @@ import model.table.Table;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class JsonDocumentWriter {
         this.partiacalExtraction = true;
     }
 
-    public String write(){
+    public String write() throws IOException {
         JSONArray jsonPages = new JSONArray();
         if (partiacalExtraction) {
             for (int i = startPage; i <= endPage; i++) {
@@ -54,7 +55,7 @@ public class JsonDocumentWriter {
         return json.toString();
     }
 
-    private JSONObject writePage(Page page){
+    private JSONObject writePage(Page page) throws IOException {
         //page.sortLines();
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
@@ -145,6 +146,11 @@ public class JsonDocumentWriter {
             jsonImage.put("original_name", image.getFileName());
             jsonImage.put("tmp_file_path", image.getPathOut());
             jsonImage.put("uuid", image.getUuid());
+            jsonImage.put("x_top_left", (int)image.getXPosition());
+            jsonImage.put("y_top_left", (int)image.getYPosition());
+            jsonImage.put("width", (int)image.getWidth());
+            jsonImage.put("height", (int)image.getHeight());
+            jsonImage.put("page_num", (int)image.getPageNumber());
             jsonImages.put(jsonImage);
         }
         jsonPage.put("images",jsonImages);

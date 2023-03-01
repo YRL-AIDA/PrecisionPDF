@@ -117,7 +117,6 @@ public class PDContentExtractor extends PDFTextStripper {
         return maxRight;
     }
 
-    @SuppressWarnings("fallthrough")
     public void process(Page page) {
         if (null == page) {
             throw new IllegalArgumentException("Page cannot be null");
@@ -158,7 +157,6 @@ public class PDContentExtractor extends PDFTextStripper {
         lineText.setLength(0);
     }
 
-    @SuppressWarnings("fallthrough")
     private void stripPage(int pageIndex) throws IOException {
         PDPage page = document.getPage(pageIndex);
 

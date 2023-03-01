@@ -88,6 +88,10 @@ public class Page extends PDFRectangle {
         this.images.add(image);
     }
 
+    public void addImages(List<PDFImage> images){
+        this.images.addAll(images);
+    }
+
     public List<PDFImage> getImages(){
         return this.images;
     }
