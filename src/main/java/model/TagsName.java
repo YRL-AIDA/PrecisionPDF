@@ -7,5 +7,6 @@ public enum TagsName {
     FOOTNOTE,
     PAGE_ID,
     LINK,
+    LITEM,
     UNKNOWN
 }

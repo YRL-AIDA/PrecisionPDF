@@ -140,6 +140,7 @@ public class JsonDocumentWriter {
             jsonTable.put("rows", jsonRows);
             jsonTables.put(jsonTable);
         }
+
         jsonPage.put("tables",jsonTables);
         for (PDFImage image: page.getImages()) {
             JSONObject jsonImage = new JSONObject();

@@ -436,6 +436,11 @@ public class Document implements Closeable {
                             (float) page.getBBox().getHeight() - (float) box.getMaxY(),
                             (float) box.getWidth(), (float) box.getHeight());
                     p.addTag(new Tag(TagsName.LINK, rec));
+                } else if (structType.equals("LBody")) {
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
+                            (float) page.getBBox().getHeight() - (float) box.getMaxY(),
+                            (float) box.getWidth(), (float) box.getHeight());
+                    p.addTag(new Tag(TagsName.LINK, rec));
                 }
             }
         }
