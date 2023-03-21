@@ -8,5 +8,10 @@ public enum TagsName {
     PAGE_ID,
     LINK,
     LITEM,
+    DIAGRAM,
+    FORMULA,
+    BIBITEM,
+    HEADER,
+    TOCITEM,
     UNKNOWN
 }

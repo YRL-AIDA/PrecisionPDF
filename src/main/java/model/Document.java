@@ -66,10 +66,6 @@ public class Document implements Closeable {
 
             File file = path.toFile();
 
-            if (file == null) {
-                return null;
-            }
-
             if (file.exists() && file.canRead()) {
                 PDDocument pdDocument = Loader.loadPDF(path.toFile());
                 Document document = new Document(file, pdDocument, startPage, endPage, pdDocument.getNumberOfPages());
@@ -104,7 +100,6 @@ public class Document implements Closeable {
         return this.pageCnt;
     }
     private void createPages(int startPage, int endPage) throws IOException {
-        int size = pdDocument.getNumberOfPages();
         for (int i = startPage; i <= endPage; i++) {
             Page page = createPage(i);
             pages.add(page);
@@ -188,23 +183,6 @@ public class Document implements Closeable {
                             word.setMetadata(tag.getName().toString());
                         }
                     }
-                }
-            }
-        }
-    }
-
-    public void extractImages() throws IOException {
-        for (Page page: getPages()) {
-            PDResources pdResources = page.getPDPage().getResources();
-            int i = 1;
-            for (COSName name : pdResources.getXObjectNames()) {
-                PDXObject o = pdResources.getXObject(name);
-                if (o instanceof PDImageXObject) {
-                    PDImageXObject image = (PDImageXObject)o;
-                    COSStream srt = image.getCOSObject();
-                    //PDFImage pdfImage = new PDFImage(image, page, this.sourceFile.getParent());
-                    //page.addImage(pdfImage);
-                    i++;
                 }
             }
         }
@@ -440,7 +418,22 @@ public class Document implements Closeable {
                     Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
                             (float) page.getBBox().getHeight() - (float) box.getMaxY(),
                             (float) box.getWidth(), (float) box.getHeight());
-                    p.addTag(new Tag(TagsName.LINK, rec));
+                    p.addTag(new Tag(TagsName.LITEM, rec));
+                } else if (structType.equals("Chart")) {
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
+                            (float) page.getBBox().getHeight() - (float) box.getMaxY(),
+                            (float) box.getWidth(), (float) box.getHeight());
+                    p.addTag(new Tag(TagsName.DIAGRAM, rec));
+                } else if (structType.equals("H1")) {
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
+                            (float) page.getBBox().getHeight() - (float) box.getMaxY(),
+                            (float) box.getWidth(), (float) box.getHeight());
+                    p.addTag(new Tag(TagsName.HEADER, rec));
+                } else if (structType.equals("TOCI")) {
+                    Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
+                            (float) page.getBBox().getHeight() - (float) box.getMaxY(),
+                            (float) box.getWidth(), (float) box.getHeight());
+                    p.addTag(new Tag(TagsName.TOCITEM, rec));
                 }
             }
         }
