@@ -16,7 +16,14 @@ import org.apache.pdfbox.pdmodel.font.*;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionGoTo;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDPageDestination;
 import org.apache.pdfbox.text.PDFMarkedContentExtractor;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -34,6 +41,8 @@ import java.awt.image.RenderedImage;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
@@ -182,6 +191,7 @@ public class Document implements Closeable {
                     for (TextChunk.TextLine word: line.getWords()) {
                         if (word.getBbox().intersects(tag.getRect()) && tag.getName().toString().equals("LINK")) {
                             word.setMetadata(tag.getName().toString());
+                            word.setUrl(tag.getUrl());
                         }
                     }
                 }
@@ -323,7 +333,56 @@ public class Document implements Closeable {
         Map<PDPage, Rectangle2D> boxes;
         boxes = new HashMap<PDPage, Rectangle2D>();
 
+        int pageNum = 0;
+
         for (PDPage page : pdDocument.getPages()) {
+            pageNum++;
+            PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+            List<PDAnnotation> annotations = page.getAnnotations();
+            for( int j=0; j<annotations.size(); j++ ) {
+                PDAnnotation annot = annotations.get(j);
+
+                if (getActionURI(annot) != null) {
+                    PDRectangle rect = annot.getRectangle();
+                    float x = rect.getLowerLeftX();
+                    float y = rect.getUpperRightY();
+                    float width = rect.getWidth();
+                    float height = rect.getHeight();
+                    int rotation = page.getRotation();
+                    if( rotation == 0 )
+                    {
+                        PDRectangle pageSize = page.getMediaBox();
+                        y = pageSize.getHeight() - y;
+                    } else {
+
+                    }
+
+                    Rectangle2D.Float awtRect = new Rectangle2D.Float(x,y,width,height);
+                    stripper.addRegion( "" + j, awtRect );
+                }
+            }
+
+            stripper.extractRegions( page );
+
+            for( int j=0; j<annotations.size(); j++ ) {
+                PDAnnotation annot = annotations.get(j);
+                PDRectangle rect = annot.getRectangle();
+                float x = rect.getLowerLeftX();
+                float y = rect.getUpperRightY();
+                float width = rect.getWidth();
+                float height = rect.getHeight();
+                PDRectangle pageSize = page.getMediaBox();
+                y = pageSize.getHeight() - y;
+                Page p = taggedPages.get(page);
+                Rectangle2D.Float awtRect = new Rectangle2D.Float(x,y,width,height);
+
+                PDActionURI uri = getActionURI(annot);
+                if (uri != null) {
+                    String urlText = stripper.getTextForRegion("" + j);
+                    p.addTag(new Tag(TagsName.LINK, awtRect, uri.getURI()));
+                }
+            }
+
             PDFMarkedContentExtractor extractor = new PDFMarkedContentExtractor();
             extractor.processPage(page);
 
@@ -334,26 +393,33 @@ public class Document implements Closeable {
             }
         }
 
-        //processImagesFromPDF(document);
-
         PDStructureNode root = pdDocument.getDocumentCatalog().getStructureTreeRoot();
 
         if (root == null)
             return;
 
-        //Map<PDPage, PDPageContentStream> visualizations = new HashMap<>();
         boxes = showStructure(this.pdDocument, root, markedContents);
 
         for (int i = 0; i < pdDocument.getNumberOfPages(); i ++) {
             PDPage currPage = pdDocument.getPage(i);
             Page page = taggedPages.get(currPage);
             if (page == null) continue;
-/*            for (Tag tag : page.getTags()) {
-                if (tag.getName().equals(TagsName.FOOTNOTE))
-                    System.out.println(tag.getName());
-            }*/
         }
-        //pdDocument.close();
+
+    }
+    private static PDActionURI getActionURI(PDAnnotation annot) {
+        try {
+            Method actionMethod = annot.getClass().getDeclaredMethod("getAction");
+            if (actionMethod.getReturnType().equals(PDAction.class)) {
+                PDAction action = (PDAction) actionMethod.invoke(annot);
+                if (action instanceof PDActionURI) {
+                    return (PDActionURI) action;
+                }
+            }
+        }
+        catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        }
+        return null;
     }
 
     void addToMap(Map<Integer, PDMarkedContent> theseMarkedContents, PDMarkedContent markedContent) {
@@ -424,18 +490,18 @@ public class Document implements Closeable {
                     Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(),
                             (float)page.getBBox().getHeight() - (float)box.getMaxY(),
                             (float)box.getWidth(), (float)box.getHeight());
-                    p.addTag(new Tag(TagsName.FOOTNOTE, rec));
+                    p.addTag(new Tag(TagsName.FOOTNOTE, rec, ""));
                 } else if (structType.equals("RunningTitle")) {
                     Rectangle2D rec = new Rectangle2D.Float((float)box.getMinX(),
                             (float)page.getBBox().getHeight() - (float)box.getMaxY(),
                             (float)box.getWidth(), (float)box.getHeight());
-                    p.addTag(new Tag(TagsName.PAGE_ID, rec));
-                } else if (structType.equals("Link")) {
+                    p.addTag(new Tag(TagsName.PAGE_ID, rec, ""));
+                } /*else if (structType.equals("Link")) {
                     Rectangle2D rec = new Rectangle2D.Float((float) box.getMinX(),
                             (float) page.getBBox().getHeight() - (float) box.getMaxY(),
                             (float) box.getWidth(), (float) box.getHeight());
                     p.addTag(new Tag(TagsName.LINK, rec));
-                }
+                }*/
             }
         }
         return result;
@@ -563,7 +629,7 @@ public class Document implements Closeable {
             images = getImagesFromResources(page.getResources());
             Page p = taggedPages.get(page);
             for (RenderedImage image: images) {
-                p.addTag(new Tag(TagsName.FIGURE, image.getData().getBounds()));
+                p.addTag(new Tag(TagsName.FIGURE, image.getData().getBounds(), ""));
             }
         }
     }

@@ -93,8 +93,10 @@ public class JsonDocumentWriter {
                 JSONObject annotation = new JSONObject();
                 if (!chunk.getMetadata().equals("")) {
                     annotation.put("metadata", chunk.getMetadata());
+                    annotation.put("url", chunk.getUrl());
                 } else {
                     annotation.put("metadata", "unknown");
+                    annotation.put("url", "");
                 }
                 annotation.put("text", chunk.getText());
                 annotation.put("is_bold", chunk.getFont().isBold());

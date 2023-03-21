@@ -182,9 +182,17 @@ public class TextChunk extends PDFRectangle {
         private String text;
         private PDFRectangle bbox;
         private PDFFont font;
+        private String url;
 
         private String metadata = "";
 
+        public String getUrl(){
+            return this.url;
+        }
+
+        public void setUrl(String url){
+            this.url = url;
+        }
         public String getText() {
             return text;
         }
