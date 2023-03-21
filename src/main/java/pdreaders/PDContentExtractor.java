@@ -460,7 +460,6 @@ public class PDContentExtractor extends PDFTextStripper {
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     protected void writeString(String string, List<TextPosition> textPositions) throws IOException {
         // Increment the order an original chunk in its PDF document
         order ++;

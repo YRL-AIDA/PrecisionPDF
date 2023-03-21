@@ -1,15 +1,16 @@
 package writers;
 
-import model.Document;
-import model.PDFImage;
-import model.Page;
-import model.TextChunk;
+import model.*;
 import model.table.Cell;
 import model.table.Row;
 import model.table.Table;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -99,6 +100,7 @@ public class JsonDocumentWriter {
                 } else {
                     annotation.put("metadata", "unknown");
                 }
+                annotation.put("url", chunk.getUrl());
                 annotation.put("text", chunk.getText());
                 annotation.put("is_bold", chunk.getFont().isBold());
                 annotation.put("is_italic", chunk.getFont().isItalic());
