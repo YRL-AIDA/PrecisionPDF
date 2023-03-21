@@ -3,10 +3,7 @@ package model;
 import model.table.Cell;
 import model.table.Table;
 import org.apache.pdfbox.pdmodel.PDPage;
-
-import java.awt.*;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.List;
 
@@ -31,10 +28,11 @@ public class Page extends PDFRectangle {
     private final java.util.List<Ruling> verticalRulings;   // Vertical normalized rulings
     private final java.util.List<Ruling> horizontalRulings; // Horizontal normalized rulings
     private final java.util.List<Ruling> visibleRulings;
-    private java.util.List<PDFRectangle> possibleTables;
+    private final java.util.List<PDFRectangle> possibleTables;
     private java.util.List<Table> tables;
-    private List<PDFRectangle> cells;
-    private List<Tag> tags;
+    private final List<PDFRectangle> cells;
+    private final List<Tag> tags;
+    private final List<PDFImage> images;
 
     // Initialization
     {
@@ -49,11 +47,11 @@ public class Page extends PDFRectangle {
         verticalRulings   = new ArrayList<>();
         horizontalRulings = new ArrayList<>();
         visibleRulings    = new ArrayList<>();
-        tables            = new ArrayList<>();
         cells             = new ArrayList<>();
         possibleTables    = new ArrayList<>();
         tables            = new ArrayList<>();
 
+        images            = new ArrayList<>();
     }
 
     public Page(Document document, int index, float left, float top, float right, float bottom) {
@@ -84,6 +82,14 @@ public class Page extends PDFRectangle {
     }
     public void addTag(Tag tag){
         tags.add(tag);
+    }
+
+    public void addImage(PDFImage image){
+        this.images.add(image);
+    }
+
+    public List<PDFImage> getImages(){
+        return this.images;
     }
 
     public List<Tag> getTags(){
@@ -205,7 +211,6 @@ public class Page extends PDFRectangle {
     }
 
     private void mergeCells(Cell c1, Cell c2){
-
     }
 
     public Iterator<PDFRectangle> getCells(){

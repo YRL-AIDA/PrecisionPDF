@@ -21,14 +21,9 @@ import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
 import org.apache.pdfbox.rendering.ImageType;
 import utils.Utils;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
-import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -69,11 +64,9 @@ public class VisibleRulingExtractor {
         PDResources resources = pdPage.getResources();
         if (resources != null) {
             processResources(resources);
-            removeAllImages(resources);
+            //removeAllImages(resources);
         }
         image = Utils.convertPageToImage(pdPage, 144, ImageType.GRAY);
-        //File outputfile = new File("/home/sunveil/pages/"+page.getIndex()+"saved.png");
-        //ImageIO.write(image, "png", outputfile);
         List<Ruling> horizontalRulings = getHorizontalRulings(image);
         List<Ruling> verticalRulings = getVerticalRulings(image);
 
@@ -203,9 +196,6 @@ public class VisibleRulingExtractor {
                     token = parser.parseNextToken();
                     continue;
                 }
-            }
-            if (token != null && token instanceof PDImageXObject) {
-                System.out.println("as");
             }
             newTokens.add(token);
             token = parser.parseNextToken();

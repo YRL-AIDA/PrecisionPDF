@@ -1,6 +1,7 @@
 package writers;
 
 import model.Document;
+import model.PDFImage;
 import model.Page;
 import model.TextChunk;
 import model.table.Cell;
@@ -58,6 +59,7 @@ public class JsonDocumentWriter {
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
+        JSONArray jsonImages = new JSONArray();
         jsonPage.put("number", page.getIndex());
         jsonPage.put("width", page.getWidth());
         jsonPage.put("height", page.getHeight());
@@ -140,6 +142,15 @@ public class JsonDocumentWriter {
             jsonTables.put(jsonTable);
         }
         jsonPage.put("tables",jsonTables);
+        for (PDFImage image: page.getImages()) {
+            JSONObject jsonImage = new JSONObject();
+            jsonImage.put("original_name", image.getFileName());
+            jsonImage.put("tmp_file_path", image.getPathOut());
+            jsonImage.put("uuid", image.getUuid());
+            jsonImages.put(jsonImage);
+        }
+        jsonPage.put("images",jsonImages);
+
         return jsonPage;
     }
 

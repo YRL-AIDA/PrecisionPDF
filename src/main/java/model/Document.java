@@ -200,13 +200,16 @@ public class Document implements Closeable {
     }
 
     public void extractImages() throws IOException {
-        for (PDPage page: pdDocument.getPages()) {
-            PDResources pdResources = page.getResources();
+        ArrayList<PDFImage> result = new ArrayList<>();
+        for (Page page: getPages()) {
+            PDResources pdResources = page.getPDPage().getResources();
             int i = 1;
             for (COSName name : pdResources.getXObjectNames()) {
                 PDXObject o = pdResources.getXObject(name);
                 if (o instanceof PDImageXObject) {
                     PDImageXObject image = (PDImageXObject)o;
+                    PDFImage pdfImage = new PDFImage(image, page, this.sourceFile.getParent());
+                    page.addImage(pdfImage);
                     i++;
                 }
             }
