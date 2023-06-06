@@ -203,11 +203,16 @@ public class VisibleRulingExtractor {
         return newTokens;
     }
 
-    public List<Ruling> getHorizontalRulings(BufferedImage image) {
+    public List<Ruling> getHorizontalRulings(BufferedImage image) throws IOException {
 
         ArrayList<Ruling> horizontalRulings = new ArrayList<>();
 
+        if (image == null) {
+            return new ArrayList<>();
+        }
+
         Raster r = image.getRaster();
+
         int width = r.getWidth();
         int height = r.getHeight();
 
@@ -260,6 +265,10 @@ public class VisibleRulingExtractor {
     }
     public List<Ruling> getVerticalRulings(BufferedImage image) {
         ArrayList<Ruling> verticalRulings = new ArrayList<>();
+
+        if (image == null) {
+            return new ArrayList<>();
+        }
 
         Raster r = image.getRaster();
         int width = r.getWidth();

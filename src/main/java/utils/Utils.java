@@ -29,7 +29,6 @@ public class Utils {
             //document.close();
             return renderer.renderImageWithDPI(0, dpi, imageType);
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         }
     }
