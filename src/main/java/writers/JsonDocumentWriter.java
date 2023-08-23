@@ -4,30 +4,26 @@ import model.*;
 import model.table.Cell;
 import model.table.Row;
 import model.table.Table;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
 public class JsonDocumentWriter {
 
-    private Document document;
-    JSONObject json = new JSONObject();
+    private final Document document;
+    JSONObject json;
     int startPage = 0;
     int endPage = 0;
-    boolean partiacalExtraction = false;
+    boolean partialExtraction;
 
     public JsonDocumentWriter(Document document){
         this.document = document;
         this.json = new JSONObject();
         this.json.put("document", this.document.getSourceFile().getName());
-        this.partiacalExtraction = false;
+        this.partialExtraction = false;
     }
 
     public JsonDocumentWriter(Document document, int startPage, int endPage){
@@ -36,12 +32,12 @@ public class JsonDocumentWriter {
         this.json.put("document", this.document.getSourceFile().getName());
         this.startPage = startPage;
         this.endPage = endPage;
-        this.partiacalExtraction = true;
+        this.partialExtraction = true;
     }
 
     public String write() throws IOException {
         JSONArray jsonPages = new JSONArray();
-        if (partiacalExtraction) {
+        if (partialExtraction) {
             for (int i = startPage; i <= endPage; i++) {
                 Page page = document.getPage(i);
                 jsonPages.put(writePage(page));
@@ -56,8 +52,9 @@ public class JsonDocumentWriter {
         return json.toString();
     }
 
-    private JSONObject writePage(Page page) throws IOException {
+    private JSONObject writePage(Page page) {
         //page.sortLines();
+        JSONObject bbox;
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
@@ -91,6 +88,10 @@ public class JsonDocumentWriter {
             int spacing = (int) (block.getTop() - prev_line.getBottom());
             if (spacing < 0) spacing = 0;
             jsonBlock.put("spacing", spacing);
+            jsonBlock.put("top", (float) block.getTop());
+            jsonBlock.put("left", (float) block.getLeft());
+            jsonBlock.put("right", (float) block.getRight());
+            jsonBlock.put("bottom", (float) block.getBottom());
             prev_line = block;
             int start = 0;
             for (TextChunk.TextLine chunk: block.getWords()){
@@ -100,6 +101,11 @@ public class JsonDocumentWriter {
                 } else {
                     annotation.put("metadata", "unknown");
                 }
+                bbox = new JSONObject();
+                bbox.put("top", (float) chunk.getBbox().getTop());
+                bbox.put("left", (float) chunk.getBbox().getLeft());
+                bbox.put("right", (float) chunk.getBbox().getRight());
+                bbox.put("bottom", (float) chunk.getBbox().getBottom());
                 annotation.put("url", chunk.getUrl());
                 annotation.put("text", chunk.getText());
                 annotation.put("is_bold", chunk.getFont().isBold());
@@ -116,6 +122,7 @@ public class JsonDocumentWriter {
                 annotation.put("end", start + len);
                 start = start + len + 1;
                 jsonAnnotations.put(annotation);
+                jsonAnnotations.put(bbox);
             }
             jsonBlock.put("annotations", jsonAnnotations);
             jsonBlocks.put(jsonBlock);
@@ -127,20 +134,32 @@ public class JsonDocumentWriter {
             jsonTable.put("y_top_left", (int)table.getTop());
             jsonTable.put("width", (int)table.getWidth());
             jsonTable.put("height", (int)table.getHeight());
-            jsonTable.put("order", (int)10000 * (page.getIndex()+1) + table.getOrder());
+            jsonTable.put("order", 10000 * (page.getIndex()+1) + table.getOrder());
+            JSONArray cellProperties = new JSONArray();
             JSONArray jsonRows = new JSONArray();
             for (int i = 0; i < table.getNumOfRows(); i++) {
                 JSONArray jsonRow = new JSONArray();
+                JSONArray jsonPropertiesRow = new JSONArray();
                 Row row = table.getRow(i);
                 for (Cell cell: row.getCells()){
                     jsonRow.put(cell.getText());
+                    JSONObject jsonProp = new JSONObject();
+                    int rowSpan = cell.getRb() - cell.getRt() + 1;
+                    jsonProp.put("row_span", rowSpan);
+                    int colSpan = cell.getCr() - cell.getCl() + 1;
+                    jsonProp.put("col_span", colSpan);
+                    jsonProp.put("invisible", "False");
+                    jsonPropertiesRow.put(jsonProp);
                 }
                 if (!row.getCells().isEmpty()) {
-                    jsonRows.put(jsonRow);;
+                    jsonRows.put(jsonRow);
+                    cellProperties.put(jsonPropertiesRow);
                 }
             }
             jsonTable.put("rows", jsonRows);
+            jsonTable.put("cell_properties", cellProperties);
             jsonTables.put(jsonTable);
+
         }
 
         jsonPage.put("tables",jsonTables);
@@ -149,11 +168,11 @@ public class JsonDocumentWriter {
             jsonImage.put("original_name", image.getFileName());
             jsonImage.put("tmp_file_path", image.getPathOut());
             jsonImage.put("uuid", image.getUuid());
-            jsonImage.put("x_top_left", (int)image.getXPosition());
-            jsonImage.put("y_top_left", (int)image.getYPosition());
-            jsonImage.put("width", (int)image.getWidth());
-            jsonImage.put("height", (int)image.getHeight());
-            jsonImage.put("page_num", (int)image.getPageNumber());
+            jsonImage.put("x_top_left", image.getXPosition());
+            jsonImage.put("y_top_left", image.getYPosition());
+            jsonImage.put("width", image.getWidth());
+            jsonImage.put("height", image.getHeight());
+            jsonImage.put("page_num", image.getPageNumber());
             jsonImages.put(jsonImage);
         }
         jsonPage.put("images",jsonImages);
