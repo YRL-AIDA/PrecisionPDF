@@ -131,7 +131,7 @@ public class DedocTableExtractor {
         List<Table> tables = em.extract(startPage, endPage);
         if (tables != null) {
             for (Table table: tables) {
-                table.splitCells();
+                //table.splitCells();
                 table.completeRows();
                 table.removeEmptyRows();
             }
@@ -159,7 +159,7 @@ public class DedocTableExtractor {
 
         if (tables != null) {
             for (Table table: tables) {
-                table.splitCells();
+                //table.splitCells();
                 table.completeRows();
                 table.removeEmptyRows();
             }

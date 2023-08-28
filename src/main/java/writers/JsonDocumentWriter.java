@@ -88,10 +88,6 @@ public class JsonDocumentWriter {
             int spacing = (int) (block.getTop() - prev_line.getBottom());
             if (spacing < 0) spacing = 0;
             jsonBlock.put("spacing", spacing);
-            jsonBlock.put("top", (float) block.getTop());
-            jsonBlock.put("left", (float) block.getLeft());
-            jsonBlock.put("right", (float) block.getRight());
-            jsonBlock.put("bottom", (float) block.getBottom());
             prev_line = block;
             int start = 0;
             for (TextChunk.TextLine chunk: block.getWords()){
@@ -101,11 +97,6 @@ public class JsonDocumentWriter {
                 } else {
                     annotation.put("metadata", "unknown");
                 }
-                bbox = new JSONObject();
-                bbox.put("top", (float) chunk.getBbox().getTop());
-                bbox.put("left", (float) chunk.getBbox().getLeft());
-                bbox.put("right", (float) chunk.getBbox().getRight());
-                bbox.put("bottom", (float) chunk.getBbox().getBottom());
                 annotation.put("url", chunk.getUrl());
                 annotation.put("text", chunk.getText());
                 annotation.put("is_bold", chunk.getFont().isBold());
@@ -122,7 +113,6 @@ public class JsonDocumentWriter {
                 annotation.put("end", start + len);
                 start = start + len + 1;
                 jsonAnnotations.put(annotation);
-                jsonAnnotations.put(bbox);
             }
             jsonBlock.put("annotations", jsonAnnotations);
             jsonBlocks.put(jsonBlock);
@@ -148,7 +138,7 @@ public class JsonDocumentWriter {
                     jsonProp.put("row_span", rowSpan);
                     int colSpan = cell.getCr() - cell.getCl() + 1;
                     jsonProp.put("col_span", colSpan);
-                    jsonProp.put("invisible", "False");
+                    jsonProp.put("invisible", cell.getInvisiable());
                     jsonPropertiesRow.put(jsonProp);
                 }
                 if (!row.getCells().isEmpty()) {

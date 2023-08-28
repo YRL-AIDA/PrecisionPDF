@@ -207,7 +207,7 @@ public final class BorderedTableExtractor extends AbstractTableExtractor {
                 int endRow = getEndRow(c, vertical);
 
                 PDFRectangle bbox = new PDFRectangle(c.getLeft(), c.getBottom(), c.getRight(), c.getTop());
-                Cell cell = new Cell(bbox, cellBlocks, startColumn, startRow, endColumn, endRow);
+                Cell cell = new Cell(bbox, 0, cellBlocks, startColumn, startRow, endColumn, endRow);
 
                 table.addCell(cell, startRow);
 

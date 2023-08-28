@@ -18,12 +18,15 @@ public class Cell extends PDFRectangle {
     private int rb; // Bottom row index
     private int order;
 
+    private int invisiable = 0;
+
     private final List<TextChunk> contentBlocks;
 
-    public Cell(PDFRectangle bbox, List<TextChunk> contentBlocks, int cl, int rt, int cr, int rb) {
+    public Cell(PDFRectangle bbox, int invisible, List<TextChunk> contentBlocks, int cl, int rt, int cr, int rb) {
         super(bbox.getLeft(), bbox.getTop(), bbox.getRight(), bbox.getBottom());
         this.contentBlocks = contentBlocks;
         this.order = Integer.MIN_VALUE;
+        this.invisiable = invisible;
         if (contentBlocks != null) {
             for (TextChunk chunk : contentBlocks) {
                 this.order = Math.max(this.order, chunk.getEndOrder());
@@ -43,12 +46,16 @@ public class Cell extends PDFRectangle {
         return this.order;
     }
 
+    public int getInvisiable(){
+        return this.invisiable;
+    }
+
     private PDFRectangle getBBox() {
         return new PDFRectangle(getLeft(), getTop(), getRight(), getBottom());
     }
 
     public Cell(Cell cell) {
-        this(cell.getBBox(), cell.contentBlocks, cell.cl, cell.rt, cell.cr, cell.rb);
+        this(cell.getBBox(), cell.invisiable, cell.contentBlocks, cell.cl, cell.rt, cell.cr, cell.rb);
     }
 
     public String getText() {

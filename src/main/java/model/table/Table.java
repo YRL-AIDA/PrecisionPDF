@@ -165,7 +165,7 @@ public class Table extends PDFRectangle {
                 for (int i = 0; i < colCnt; i++ ) {
                     if (!r.existCell(i,i)) {
                         PDFRectangle rec = new PDFRectangle(0, 0, 0, 0);
-                        r.addCell(new Cell(rec, null, i, r.getId(), i, r.getId()));
+                        r.addCell(new Cell(rec, 1, null, i, r.getId(), i, r.getId()));
                     }
                 }
             }
@@ -203,7 +203,7 @@ public class Table extends PDFRectangle {
                     cell.setCr(cl);
                     for (int i = cl + 1; i <= cr; i++){
                         PDFRectangle rec = new PDFRectangle(cell.getLeft(), cell.getTop(), cell.getRight(), cell.getBottom());
-                        splitedCells.add(new Cell(rec, cell.getTextBlocks(), i, rt, i, rt));
+                        splitedCells.add(new Cell(rec, 1, cell.getTextBlocks(), i, rt, i, rt));
                     }
                 }
                 if (w > 0) {
@@ -211,7 +211,7 @@ public class Table extends PDFRectangle {
                     cell.setRb(rt);
                     for (int i = rt + 1; i < rb; i++){
                         Row r = rows.get(i);
-                        r.addCell(new Cell(cell, cell.getTextBlocks(), cl, i, cr, i));
+                        r.addCell(new Cell(cell, 1, cell.getTextBlocks(), cl, i, cr, i));
                     }
                 }
             }
