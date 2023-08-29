@@ -132,8 +132,8 @@ public class DedocTableExtractor {
         if (tables != null) {
             for (Table table: tables) {
                 //table.splitCells();
-                table.completeRows();
-                table.removeEmptyRows();
+                //table.completeRows();
+                //table.removeEmptyRows();
             }
         }
 
@@ -160,8 +160,8 @@ public class DedocTableExtractor {
         if (tables != null) {
             for (Table table: tables) {
                 //table.splitCells();
-                table.completeRows();
-                table.removeEmptyRows();
+                //table.completeRows();
+                //table.removeEmptyRows();
             }
         }
 
