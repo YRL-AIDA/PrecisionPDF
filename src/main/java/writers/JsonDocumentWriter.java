@@ -35,7 +35,7 @@ public class JsonDocumentWriter {
         this.partialExtraction = true;
     }
 
-    public String write() throws IOException {
+    public String write() {
         JSONArray jsonPages = new JSONArray();
         if (partialExtraction) {
             for (int i = startPage; i <= endPage; i++) {
@@ -54,7 +54,6 @@ public class JsonDocumentWriter {
 
     private JSONObject writePage(Page page) {
         //page.sortLines();
-        JSONObject bbox;
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
         JSONArray jsonTables = new JSONArray();
@@ -139,6 +138,16 @@ public class JsonDocumentWriter {
                     int colSpan = cell.getCr() - cell.getCl() + 1;
                     jsonProp.put("col_span", colSpan);
                     jsonProp.put("invisible", cell.getInvisiable());
+                    JSONArray cellBlocks = new JSONArray();
+                    for(TextChunk tb: cell.getTextBlocks()) {
+                        JSONObject cellBlock = new JSONObject();
+                        cellBlock.put("x_top_left", (int)tb.getLeft());
+                        cellBlock.put("y_top_left", (int)tb.getTop());
+                        cellBlock.put("width", (int)tb.getWidth());
+                        cellBlock.put("height", (int)tb.getHeight());
+                        cellBlocks.put(cellBlock);
+                    }
+                    jsonProp.put("cell_blocks", cellBlocks);
                     jsonPropertiesRow.put(jsonProp);
                 }
                 if (!row.getCells().isEmpty()) {
