@@ -311,12 +311,12 @@ public class Document implements Closeable {
         Map<PDPage, Rectangle2D> boxes;
         boxes = new HashMap<PDPage, Rectangle2D>();
 
-        for (PDPage page : pdDocument.getPages()) {
+        for (Page page : this.getPages()) {
             PDFMarkedContentExtractor extractor = new PDFMarkedContentExtractor();
-            extractor.processPage(page);
+            extractor.processPage(page.getPDPage());
 
             Map<Integer, PDMarkedContent> theseMarkedContents = new HashMap<>();
-            markedContents.put(page, theseMarkedContents);
+            markedContents.put(page.getPDPage(), theseMarkedContents);
             for (PDMarkedContent markedContent : extractor.getMarkedContents()) {
                 addToMap(theseMarkedContents, markedContent);
             }

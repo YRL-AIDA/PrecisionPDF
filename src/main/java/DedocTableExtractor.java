@@ -54,6 +54,7 @@ public class DedocTableExtractor {
 
     public static void main(String[] args) {
         System.getProperties().put("org.apache.commons.logging.simplelog.defaultlog","fatal");
+        System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider");
         new DedocTableExtractor().run(args);
     }
 
@@ -126,13 +127,6 @@ public class DedocTableExtractor {
 
         ExtractionManager em = new ExtractionManager(document);
         List<Table> tables = em.extract(startPage, endPage);
-        if (tables != null) {
-            for (Table table: tables) {
-                //table.splitCells();
-                //table.completeRows();
-                //table.removeEmptyRows();
-            }
-        }
 
         printJSON(document);
 
@@ -153,14 +147,6 @@ public class DedocTableExtractor {
 
         ExtractionManager em = new ExtractionManager(document);
         List<Table> tables = em.extract();
-
-        if (tables != null) {
-            for (Table table: tables) {
-                //table.splitCells();
-                //table.completeRows();
-                //table.removeEmptyRows();
-            }
-        }
 
         printJSON(document);
 
