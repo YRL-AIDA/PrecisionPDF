@@ -85,9 +85,7 @@ public class DedocTableExtractor {
                 if (sPage != null && !sPage.isEmpty() && ePage != null && !ePage.isEmpty()) {
                     startPage = Integer.parseInt(sPage);
                     endPage = Integer.parseInt(ePage);
-                    //if (startPage <= endPage) {
                     extract(inputFile.toPath(), startPage - 1, endPage - 1);
-                    //}
                 } else {
                     extract(inputFile.toPath());
                 }
@@ -117,13 +115,12 @@ public class DedocTableExtractor {
     public void extract(Path path, int startPage, int endPage) throws IOException, ParserConfigurationException, TransformerException {
 
         Document document = null;
-
         document = Document.load(path, startPage, endPage);
         int lastPageIndex = document.getPageCnt();
         if (startPage > lastPageIndex)
             return;
-        startPage = startPage < 0 ? 0: startPage;
-        endPage = endPage > lastPageIndex ? lastPageIndex : endPage;
+        startPage = startPage <= 0 ? 0: startPage;
+        endPage = endPage >= lastPageIndex ? lastPageIndex : endPage;
         BlockComposer bc = new BlockComposer();
         bc.compose(document, startPage, endPage);
 

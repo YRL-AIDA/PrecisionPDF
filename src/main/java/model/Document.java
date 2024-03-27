@@ -73,6 +73,9 @@ public class Document implements Closeable {
 
             if (file.exists() && file.canRead()) {
                 PDDocument pdDocument = Loader.loadPDF(path.toFile());
+                int lastPageIndex = pdDocument.getNumberOfPages();
+                startPage = startPage <= 0 ? 0: startPage;
+                endPage = endPage > lastPageIndex - 1 ? lastPageIndex - 1 : endPage;
                 Document document = new Document(file, pdDocument, startPage, endPage, pdDocument.getNumberOfPages());
                 //document.extractImages();
                 //document.extractAttachments(path);

@@ -3,6 +3,7 @@ package model.table;
 import model.PDFRectangle;
 import model.TextChunk;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class Cell extends PDFRectangle {
     private int cr; // Right column index
     private int rb; // Bottom row index
     private int order;
+
+    private List<TextChunk> words = new ArrayList<>();
 
     private int invisiable = 0;
 
@@ -122,5 +125,13 @@ public class Cell extends PDFRectangle {
         this.rb = rb;
     }
 
+
+    public List<TextChunk> getWords() {
+        return this.words;
+    }
+
+    public void addWord(TextChunk word) {
+        this.words.add(word);
+    }
 
 }

@@ -12,29 +12,19 @@ import java.util.*;
 public final class ExtractionManager {
     private Document document;
 
-    private int workAreasCount;
 
     public ExtractionManager(Document document) {
 
         this.document = document;
-        workAreasCount = 0;
     }
 
     public List<Table> extract() {
         List<Table> result = new ArrayList<>();
 
-        // Detect and build blocks
-        /*BlockComposer bc = new BlockComposer();
-        bc.compose(document);*/
-
-        // Detect running titles
-        //detectRunningTitles(document);
-
         String docFileName = document.getSourceFile().getName();
 
         for(Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext();) {
             Page page = pages.next();
-            //WorkArea area = createWorkArea(page.getLeft(), page.getTop(), page.getRight(), page.getBottom(), page, null);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
             List<Table> borderedTables = bte.extract();
             int ordinal = 1;
@@ -54,18 +44,10 @@ public final class ExtractionManager {
     public List<Table> extract(int startPage, int endPage) {
         List<Table> result = new ArrayList<>();
 
-        // Detect and build blocks
-        /*BlockComposer bc = new BlockComposer();
-        bc.compose(document);*/
-
-        // Detect running titles
-        //detectRunningTitles(document);
-
         String docFileName = document.getSourceFile().getName();
 
-        for(int i = startPage; i < endPage; i++) {
+        for(int i = startPage; i <= endPage; i++) {
             Page page = document.getPage(i);
-            //WorkArea area = createWorkArea(page.getLeft(), page.getTop(), page.getRight(), page.getBottom(), page, null);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
             List<Table> borderedTables = bte.extract();
             int ordinal = 1;

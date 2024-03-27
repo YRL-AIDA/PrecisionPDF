@@ -7,7 +7,6 @@ import model.table.Table;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -131,23 +130,31 @@ public class JsonDocumentWriter {
                 JSONArray jsonPropertiesRow = new JSONArray();
                 Row row = table.getRow(i);
                 for (Cell cell: row.getCells()){
-                    jsonRow.put(cell.getText());
+                    JSONObject cellText = new JSONObject();
+                    cellText.put("text", cell.getText());
+                    JSONArray cellBlocks = new JSONArray();
+                    int start = 0;
+                    for(TextChunk tb: cell.getWords()) {
+                        JSONObject cellBlock = new JSONObject();
+                        cellBlock.put("x_top_left", (int)tb.getLeft());
+                        cellBlock.put("y_top_left", (int)tb.getTop());
+                        cellBlock.put("width", (int)tb.getWidth());
+                        cellBlock.put("height", (int)tb.getHeight());
+                        cellBlock.put("start", start);
+                        int len = tb.getText().length();
+                        cellBlock.put("end", start + len);
+                        start = start + len + 1;
+                        cellBlocks.put(cellBlock);
+                    }
+
+                    cellText.put("cell_blocks", cellBlocks);
+                    jsonRow.put(cellText);
                     JSONObject jsonProp = new JSONObject();
                     int rowSpan = cell.getRb() - cell.getRt() + 1;
                     jsonProp.put("row_span", rowSpan);
                     int colSpan = cell.getCr() - cell.getCl() + 1;
                     jsonProp.put("col_span", colSpan);
                     jsonProp.put("invisible", cell.getInvisiable());
-                    JSONArray cellBlocks = new JSONArray();
-                    for(TextChunk tb: cell.getTextBlocks()) {
-                        JSONObject cellBlock = new JSONObject();
-                        cellBlock.put("x_top_left", (int)tb.getLeft());
-                        cellBlock.put("y_top_left", (int)tb.getTop());
-                        cellBlock.put("width", (int)tb.getWidth());
-                        cellBlock.put("height", (int)tb.getHeight());
-                        cellBlocks.put(cellBlock);
-                    }
-                    jsonProp.put("cell_blocks", cellBlocks);
                     jsonPropertiesRow.put(jsonProp);
                 }
                 if (!row.getCells().isEmpty()) {
