@@ -80,10 +80,10 @@ public class ImageExtractor extends PDFStreamEngine {
                 this.images.add(pdfImage);
                 pdfImage.save();
             }
-/*            else if(xobject instanceof PDFormXObject) {
+            else if(xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject)xobject;
                 showForm(form);
-            }*/
+            }
         } else {
             super.processOperator( operator, operands);
         }
