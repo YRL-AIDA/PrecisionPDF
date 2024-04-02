@@ -26,10 +26,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class VisibleRulingExtractor {
 
@@ -151,7 +148,9 @@ public class VisibleRulingExtractor {
                 PDFormXObject formXObject = (PDFormXObject) xObject;
                 writeTokensToStream(formXObject.getContentStream(),
                         createTokensWithoutText(formXObject));
-                if (formXObject.getResources() != null) {
+                if (formXObject.getResources() != null
+                        && formXObject.getResources() != resources
+                        && formXObject.getResources().getCOSObject() != resources.getCOSObject()) {
                     processResources(formXObject.getResources());
                 }
             }
