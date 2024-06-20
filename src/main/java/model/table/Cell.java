@@ -127,7 +127,7 @@ public class Cell extends PDFRectangle {
 
 
     public List<TextChunk> getWords() {
-        return this.words;
+        return this.contentBlocks;
     }
 
     public void addWord(TextChunk word) {
