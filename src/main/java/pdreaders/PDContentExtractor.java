@@ -384,7 +384,7 @@ public class PDContentExtractor extends PDFTextStripper {
             //if (tp.getWidthOfSpace() )
             //epsilon = tp.getWidthOfSpace();
             if (newWordStarted) {
-                if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2) {
+                if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2.3) {
                     sb.append(text);
                     wordRight = right;
 
