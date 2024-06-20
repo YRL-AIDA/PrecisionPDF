@@ -134,17 +134,22 @@ public class JsonDocumentWriter {
                     cellText.put("text", cell.getText());
                     JSONArray cellBlocks = new JSONArray();
                     int start = 0;
-                    for(TextChunk tb: cell.getWords()) {
-                        JSONObject cellBlock = new JSONObject();
-                        cellBlock.put("x_top_left", (int)tb.getLeft());
-                        cellBlock.put("y_top_left", (int)tb.getTop());
-                        cellBlock.put("width", (int)tb.getWidth());
-                        cellBlock.put("height", (int)tb.getHeight());
-                        cellBlock.put("start", start);
-                        int len = tb.getText().length();
-                        cellBlock.put("end", start + len);
-                        start = start + len + 1;
-                        cellBlocks.put(cellBlock);
+                    for(TextChunk tb: page.getTextLines()) {
+                        for (TextChunk.TextLine tl: tb.getWords()){
+                            if (cell.intersects(tl.getBbox())){
+                                JSONObject cellBlock = new JSONObject();
+                                cellBlock.put("x_top_left", (int)tl.getBbox().getLeft());
+                                cellBlock.put("y_top_left", (int)tl.getBbox().getTop());
+                                cellBlock.put("width", (int)tl.getBbox().getWidth());
+                                cellBlock.put("height", (int)tl.getBbox().getHeight());
+                                cellBlock.put("start", start);
+                                int len = tb.getText().length();
+                                cellBlock.put("end", start + len);
+                                start = start + len + 1;
+                                cellBlocks.put(cellBlock);
+
+                            }
+                        }
                     }
 
                     cellText.put("cell_blocks", cellBlocks);

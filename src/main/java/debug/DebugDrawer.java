@@ -370,7 +370,7 @@ public class DebugDrawer {
                 tp = table.getTop();
                 rt = table.getRight();
                 bm = table.getBottom();
-                drawer3.drawRectangle(lt - 2, tp - 2, rt + 2, bm + 2);
+                drawer3.drawRectangle(lt - 2, bm + 2, rt + 2, tp - 2);
             }
 
             drawer3.close();
