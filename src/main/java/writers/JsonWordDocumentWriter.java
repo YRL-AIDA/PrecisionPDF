@@ -1,6 +1,9 @@
 package writers;
 
-import model.*;
+import model.Document;
+import model.PDFImage;
+import model.Page;
+import model.TextChunk;
 import model.table.Cell;
 import model.table.Row;
 import model.table.Table;
@@ -10,112 +13,52 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.List;
 
-public class JsonDocumentWriter {
 
-    private final Document document;
-    JSONObject json;
-    int startPage = 0;
-    int endPage = 0;
-    boolean partialExtraction;
-
-    public JsonDocumentWriter(Document document){
-        this.document = document;
-        this.json = new JSONObject();
-        this.json.put("document", this.document.getSourceFile().getName());
-        this.partialExtraction = false;
+public class JsonWordDocumentWriter extends JsonDocumentWriter{
+    public JsonWordDocumentWriter(Document document) {
+        super(document);
     }
 
-    public JsonDocumentWriter(Document document, int startPage, int endPage){
-        this.document = document;
-        this.json = new JSONObject();
-        this.json.put("document", this.document.getSourceFile().getName());
-        this.startPage = startPage;
-        this.endPage = endPage;
-        this.partialExtraction = true;
-    }
-
-    public String write() {
-        JSONArray jsonPages = new JSONArray();
-        if (partialExtraction) {
-            for (int i = startPage; i <= endPage; i++) {
-                Page page = document.getPage(i);
-                jsonPages.put(this.writePage(page));
-            }
-        } else {
-            for (Iterator<Page> it = this.document.getPagesItrerator(); it.hasNext(); ) {
-                Page page = it.next();
-                jsonPages.put(this.writePage(page));
-            }
-        }
-        json.put("pages", jsonPages);
-        return json.toString();
+    public JsonWordDocumentWriter(Document document, int startPage, int endPage) {
+        super(document, startPage, endPage);
     }
 
     public JSONObject writePage(Page page) {
         //page.sortLines();
         JSONObject jsonPage = new JSONObject();
         JSONArray jsonBlocks = new JSONArray();
+        JSONArray jsonWords = new JSONArray();
         JSONArray jsonTables = new JSONArray();
         JSONArray jsonImages = new JSONArray();
+
         jsonPage.put("number", page.getIndex());
         jsonPage.put("width", page.getWidth());
         jsonPage.put("height", page.getHeight());
-        TextChunk prev_line = null;
-        if (!page.getTextLines().isEmpty()) {
-            prev_line = page.getTextLines().get(0);
-        }
-        List<TextChunk> outsideTextLine = page.getOutsideTextLines();
-        for (TextChunk block: outsideTextLine) {
-            JSONObject jsonBlock = new JSONObject();
-            JSONArray jsonAnnotations = new JSONArray();
-            jsonBlock.put("order", 10000 * (page.getIndex()+1) + block.getId());
-            jsonBlock.put("x_top_left", (int)block.getLeft());
-            jsonBlock.put("y_top_left", (int)block.getTop());
-            jsonBlock.put("width", (int)block.getWidth());
-            int height = (int)block.getHeight() < 0 ? 0: (int)block.getHeight();
-            jsonBlock.put("height", height);
-            jsonBlock.put("text", block.getText());
-            jsonBlock.put("start", 0);
-            jsonBlock.put("end", block.getText().length() - 1);
-            if (!block.getMetadata().equals("")) {
-                jsonBlock.put("metadata", block.getMetadata());
-            } else {
-                jsonBlock.put("metadata", "unknown");
-            }
-            jsonBlock.put("indent", (int) block.getLeft());
-            int spacing = (int) (block.getTop() - prev_line.getBottom());
-            if (spacing < 0) spacing = 0;
-            jsonBlock.put("spacing", spacing);
-            prev_line = block;
-            int start = 0;
-            for (TextChunk.TextLine chunk: block.getWords()){
-                JSONObject annotation = new JSONObject();
-                if (!chunk.getMetadata().equals("")) {
-                    annotation.put("metadata", chunk.getMetadata());
-                } else {
-                    annotation.put("metadata", "unknown");
+
+        List<TextChunk> outsideWords = page.getOutsideWords();
+        for (TextChunk word: outsideWords) {
+            JSONObject jsonWord = new JSONObject();
+            jsonWord.put("x_top_left", (int)word.getLeft());
+            jsonWord.put("y_top_left", (int)word.getTop());
+            jsonWord.put("width", (int)word.getWidth());
+            int height = (int)word.getHeight() < 0 ? 0: (int)word.getHeight();
+            jsonWord.put("height", height);
+            jsonWord.put("text", word.getText());
+            if (word.getFont().isBold()){
+                jsonWord.put("type", "bold");
+            }else{
+                if (word.getFont().isItalic()){
+                    jsonWord.put("type", "bold");
+                }else{
+                    jsonWord.put("type", "normal");
                 }
-                annotation.put("url", chunk.getUrl());
-                annotation.put("text", chunk.getText());
-                annotation.put("is_bold", chunk.getFont().isBold());
-                annotation.put("is_italic", chunk.getFont().isItalic());
-                annotation.put("is_normal", chunk.getFont().isNormal());
-                annotation.put("font_name", chunk.getFont().getName());
-                annotation.put("font_size", (int)chunk.getFont().getFontSize());
-                annotation.put("x_top_left", (int)chunk.getBbox().getLeft());
-                annotation.put("y_top_left", (int)chunk.getBbox().getTop());
-                annotation.put("width", (int)chunk.getBbox().getWidth());
-                annotation.put("height", (int)chunk.getBbox().getHeight());
-                annotation.put("start", start);
-                int len = chunk.getText().length();
-                annotation.put("end", start + len);
-                start = start + len + 1;
-                jsonAnnotations.put(annotation);
             }
-            jsonBlock.put("annotations", jsonAnnotations);
-            jsonBlocks.put(jsonBlock);
+            jsonWord.put("font_size", word.getFont().getFontSize());
+            jsonWords.put(jsonWord);
+
         }
-        jsonPage.put("blocks",jsonBlocks);
+        jsonPage.put("words",jsonWords);
+
         for (Table table: page.getTables()) {
             JSONObject jsonTable = new JSONObject();
             jsonTable.put("x_top_left", (int)table.getLeft());
@@ -187,8 +130,6 @@ public class JsonDocumentWriter {
             jsonImages.put(jsonImage);
         }
         jsonPage.put("images",jsonImages);
-
         return jsonPage;
     }
-
 }

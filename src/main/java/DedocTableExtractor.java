@@ -19,6 +19,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import writers.HtmlTableWriter;
 import writers.JsonDocumentWriter;
+import writers.JsonWordDocumentWriter;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -51,6 +52,9 @@ public class DedocTableExtractor {
     private boolean debug = false;
     @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
     private boolean help = false;
+
+    @Option(name = "-w", aliases = {"--words"}, usage = "return page with words")
+    private boolean isWordDocumentWriter = false;
 
     public static void main(String[] args) {
         System.getProperties().put("org.apache.commons.logging.simplelog.defaultlog","fatal");
@@ -182,6 +186,9 @@ public class DedocTableExtractor {
 
     private void printJSON(Document document) throws IOException {
         JsonDocumentWriter writer = new JsonDocumentWriter(document);
+        if (isWordDocumentWriter) {
+            writer = new JsonWordDocumentWriter(document);
+        }
         System.out.println(writer.write());
     }
 
