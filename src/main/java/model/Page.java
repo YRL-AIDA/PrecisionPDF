@@ -240,37 +240,38 @@ public class Page extends PDFRectangle {
         return visibleRulings.iterator();
     }
 
-    public List<TextChunk> getOutsideBlocks(){
+
+    private List<TextChunk> getChunksIsNotFromTable(List<TextChunk> chunks){
         List<TextChunk> result = new ArrayList<>();
-        if (tables.isEmpty()) return blocks;
-        for (TextChunk block: blocks) {
+        if (tables.isEmpty()) return chunks;
+        for (TextChunk chunk: chunks) {
+            boolean canAdd = true;
             for (Table table: tables) {
-                if (!block.intersects(table) && !result.contains(block)) {
-                    result.add(block);
+                if (chunk.intersects(table) || result.contains(chunk)) {
+                    canAdd = false;
                 }
+            }
+            if (canAdd) {
+                result.add(chunk);
             }
         }
         return result;
+    }
+
+
+    public List<TextChunk> getOutsideBlocks(){
+        return getChunksIsNotFromTable(blocks);
+    }
+
+    public List<TextChunk> getOutsideWords(){
+        return getChunksIsNotFromTable(words);
     }
 
     public List<TextChunk> getTextLines(){
         return lines;
     }
     public List<TextChunk> getOutsideTextLines(){
-        List<TextChunk> result = new ArrayList<>();
-        if (tables.isEmpty()) return lines;
-        for (TextChunk block: lines) {
-            boolean canAdd = true;
-            for (Table table: tables) {
-                if (block.intersects(table) || result.contains(block)) {
-                    canAdd = false;
-                }
-            }
-            if (canAdd) {
-                result.add(block);
-            }
-        }
-        return result;
+        return getChunksIsNotFromTable(lines);
     }
 
     public enum Orientation {
