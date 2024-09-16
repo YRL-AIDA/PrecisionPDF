@@ -354,7 +354,12 @@ public class PDContentExtractor extends PDFTextStripper {
         PDFFont wordFont = null;
         Color color = null;
 
+        int numberWordCenterTextPosition = 0;
+        boolean indicatorForCenterTextPosition = false;
+        int numberTp = 0;
+
         for (TextPosition tp: textPositions) {
+            numberTp += 1;
             String text = tp.getUnicode();
             //ToDO: Fix it. Embedded fonts
             if (tp.getUnicode().equals("\uF0B7")){
@@ -381,9 +386,10 @@ public class PDContentExtractor extends PDFTextStripper {
             final float right  = tp.getXDirAdj() + tp.getWidthDirAdj();
             final float bottom = tp.getYDirAdj();
 
+
             //if (tp.getWidthOfSpace() )
             //epsilon = tp.getWidthOfSpace();
-            if (newWordStarted) {
+            if (newWordStarted) { //Зачем если она всегда включено, кроме первого символа
                 if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2.5) {
                     sb.append(text);
                     wordRight = right;
@@ -397,16 +403,27 @@ public class PDContentExtractor extends PDFTextStripper {
                     spaceWidth = tp.getWidthOfSpace();
                     wordFont = getFont(tp);
                     color = getColor(tp);
+                    //Слово состоит из n букв мы берем только четны n/2
+                    if (indicatorForCenterTextPosition){
+                        indicatorForCenterTextPosition = false;
+                    }else{
+                        numberWordCenterTextPosition += 1;
+                        indicatorForCenterTextPosition = true;
+                    }
                 }
                 else {
                     // The new word ends here
                     // Creating the new word
-                    String wordText = sb.toString();
 
+                    String wordText = sb.toString();
                     TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
                     spaceWidth = tp.getWidthOfSpace();
-                    wordFont = getFont(tp);
-                    color = getColor(tp);
+
+                    TextPosition centerTp = textPositions.get(numberTp-numberWordCenterTextPosition);
+                    numberWordCenterTextPosition = 0;
+
+                    wordFont = getFont(centerTp);
+                    color = getColor(centerTp);
                     word.setFont(wordFont);
                     word.updateTextLine();
                     word.setColor(color);
