@@ -342,138 +342,113 @@ public class PDContentExtractor extends PDFTextStripper {
         final StringBuilder sb = new StringBuilder(textPositions.size());
         boolean newWordStarted = false;
 
-        final float epsilon = 0.5f;
 
         // Word coordinates
-        float wordLeft   = 0f;
-        float wordTop    = 0f;
-        float wordRight  = 0f;
-        float wordBottom = 0f;
-        float spaceWidth = 0f;
+        PDFRectangle wordBBox = new PDFRectangle(0f,0f ,0f,0f);
 
-        PDFFont wordFont = null;
-        Color color = null;
-
-        int numberWordCenterTextPosition = 0;
-        boolean indicatorForCenterTextPosition = false;
-        int numberTp = 0;
+        int numberTpInWord = 0;
+        int indexTp = 0;
 
         for (TextPosition tp: textPositions) {
-            numberTp += 1;
-            String text = tp.getUnicode();
-            //ToDO: Fix it. Embedded fonts
-            if (tp.getUnicode().equals("\uF0B7")){
-                text = "•";
-            }
-            if (text == null || text.isEmpty()) continue;
-            if (containsWhitespace(text)) continue;
-
-            // Check if the text position is not directed (rotated)
-            if (tp.getDir() != 0) {
-                //System.err.println("WARNING: a directed text was ignored");
-                continue;
-            }
-            // Check if the font of the text position is not null
-            PDFFont font = getFont(tp);
-            if (null == font) {
-                //System.err.println("WARNING: a text whose font is null was ignored");
-                continue;
-            }
-
-            // Text position coordinates
-            final float left   = tp.getXDirAdj();
-            final float top    = tp.getYDirAdj() - tp.getHeightDir();
-            final float right  = tp.getXDirAdj() + tp.getWidthDirAdj();
-            final float bottom = tp.getYDirAdj();
 
 
-            //if (tp.getWidthOfSpace() )
-            //epsilon = tp.getWidthOfSpace();
-            if (newWordStarted) { //Зачем если она всегда включено, кроме первого символа
-                if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2.5) {
-                    sb.append(text);
-                    wordRight = right;
+            if (!isWordChar(tp)){continue;}
 
-                    if (Float.compare(wordTop, top) > 0)
-                        wordTop = top;
-
-                    if (Float.compare(wordBottom, bottom) < 0)
-                        wordBottom = bottom;
-
-                    spaceWidth = tp.getWidthOfSpace();
-                    wordFont = getFont(tp);
-                    color = getColor(tp);
-                    //Слово состоит из n букв мы берем только четны n/2
-                    if (indicatorForCenterTextPosition){
-                        indicatorForCenterTextPosition = false;
-                    }else{
-                        numberWordCenterTextPosition += 1;
-                        indicatorForCenterTextPosition = true;
-                    }
+            if (newWordStarted) {
+                if (isNear(wordBBox, tp)) {
+                    joinTpAndWord(tp, wordBBox, sb);
+                    numberTpInWord += 1;
                 }
                 else {
-                    // The new word ends here
-                    // Creating the new word
-
-                    String wordText = sb.toString();
-                    TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
-                    spaceWidth = tp.getWidthOfSpace();
-
-                    TextPosition centerTp = textPositions.get(numberTp-numberWordCenterTextPosition);
-                    numberWordCenterTextPosition = 0;
-
-                    wordFont = getFont(centerTp);
-                    color = getColor(centerTp);
-                    word.setFont(wordFont);
-                    word.updateTextLine();
-                    word.setColor(color);
-                    word.setSpaceWidth(spaceWidth);
-                    word.setStartOrder(order);
-                    word.setEndOrder(order);
-                    word.setId(order);
-                    words.add(word);
-                    tmpWords.add(word);
-
-                    // A new word starts here
-                    sb.setLength(0);
-                    sb.append(text);
-                    wordLeft = left;
-                    wordTop = top;
-                    wordRight = right;
-                    wordBottom = bottom;
-                    spaceWidth = tp.getWidthOfSpace();
-                    wordFont = getFont(tp);
-                    color = getColor(tp);
+                    TextPosition centerTp = textPositions.get(indexTp-numberTpInWord/2);
+                    addWordToWordList(wordBBox, sb, order, centerTp);
+                    numberTpInWord = 0;
+                    setWordFromTp(wordBBox, tp, sb);
                 }
             }
             else {
-                // A new word starts here
                 newWordStarted = true;
-                sb.append(text);
-                wordLeft = left;
-                wordTop = top;
-                wordRight = right;
-                wordBottom = bottom;
-                spaceWidth = tp.getWidthOfSpace();
-                wordFont = getFont(tp);
-                color = getColor(tp);
+                setWordFromTp(wordBBox, tp, sb);
             }
+            indexTp += 1;
         }
 
         if (newWordStarted) {
-            // The new word ends here
-            // Creating the new word
-            String wordText = sb.toString();
-            TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
-            word.setFont(wordFont);
-            word.setColor(color);
-            word.setSpaceWidth(spaceWidth);
-            word.setStartOrder(order);
-            word.setEndOrder(order);
-            words.add(word);
-            word.setId(order);
-            tmpWords.add(word);
+            TextPosition tp = textPositions.get(indexTp-1);
+            addWordToWordList(wordBBox, sb, order, tp);
         }
+    }
+
+    private void addWordToWordList(PDFRectangle wordBBoc,
+                                   StringBuilder sb, int order, TextPosition tpWithStyle){
+        String wordText = sb.toString();
+        TextChunk word = new TextChunk(wordBBoc, wordText, currentPage);
+        PDFFont wordFont = getFont(tpWithStyle);
+        Color color = null;
+        try {
+            color = getColor(tpWithStyle);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        word.setFont(wordFont);
+        word.updateTextLine();
+        word.setColor(color);
+        word.setSpaceWidth(tpWithStyle.getWidthOfSpace());
+        word.setStartOrder(order);
+        word.setEndOrder(order);
+        word.setId(order);
+        words.add(word);
+        tmpWords.add(word);
+    }
+
+    private void joinTpAndWord(TextPosition tp, PDFRectangle wordBBox, StringBuilder sbWord){
+        final PDFRectangle tpBBox = new PDFRectangle(tp);
+        sbWord.append(getTextTp(tp));
+        wordBBox.setRight(tpBBox.getRight());
+
+        if (wordBBox.getTop() > tpBBox.getTop())
+            wordBBox.setTop(tpBBox.getTop());
+
+        if (wordBBox.getBottom() < tpBBox.getBottom())
+            wordBBox.setBottom(tpBBox.getBottom());
+    }
+
+    private void setWordFromTp(PDFRectangle wordBBox, TextPosition tp, StringBuilder sb){
+        final PDFRectangle tpBBox = new PDFRectangle(tp);
+        sb.setLength(0);
+        sb.append(getTextTp(tp));
+        wordBBox.setPDFRectangle(tpBBox);
+    }
+
+    private boolean isWordChar(TextPosition tp){
+        String text = getTextTp(tp);
+        if (text == null || text.isEmpty()) return false;
+        if (containsWhitespace(text)) return false;
+
+        // Check if the text position is not directed (rotated)
+        if (tp.getDir() != 0) {
+            //System.err.println("WARNING: a directed text was ignored");
+            return false;
+        }
+        // Check if the font of the text position is not null
+        PDFFont font = getFont(tp);
+        if (null == font) {
+            //System.err.println("WARNING: a text whose font is null was ignored");
+            return false;
+        }
+
+        return true;
+    }
+
+    private String getTextTp(TextPosition tp){
+        String text = tp.getUnicode();
+        //ToDO: Fix it. Embedded fonts
+        if (tp.getUnicode().equals("\uF0B7")){text = "•";}
+        return text;
+    }
+    private  boolean isNear(PDFRectangle wordBBox,  TextPosition tp){
+        final PDFRectangle tpBBox = new PDFRectangle(tp);
+        return Math.abs(wordBBox.getRight() - tpBBox.getLeft()) < tp.getWidthOfSpace() * 0.4;
     }
 
     @Override
