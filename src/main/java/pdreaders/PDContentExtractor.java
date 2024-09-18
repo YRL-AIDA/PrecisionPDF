@@ -350,8 +350,6 @@ public class PDContentExtractor extends PDFTextStripper {
         int indexTp = 0;
 
         for (TextPosition tp: textPositions) {
-
-
             if (!isWordChar(tp)){continue;}
 
             if (newWordStarted) {

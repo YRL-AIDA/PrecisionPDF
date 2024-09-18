@@ -7,6 +7,16 @@ public class PDFFont {
     private boolean italic;
     private float fontSize;
 
+    public PDFFont copyFont(){
+        PDFFont copy = new PDFFont();
+        copy.setBold(this.isBold());
+        copy.setItalic(this.isItalic());
+        copy.setHeight(this.getHeight());
+        copy.setFontSize(this.getFontSize());
+        copy.setName(this.name);
+        return copy;
+    }
+
     public void setFontSize(float fontSize) {
         this.fontSize = fontSize;
     }
