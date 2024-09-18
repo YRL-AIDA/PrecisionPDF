@@ -4,6 +4,8 @@ import java.nio.file.*;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import debug.DebugDrawer;
 import exceptions.EmptyArgumentException;
 import extractors.BlockComposer;
@@ -39,6 +41,11 @@ public class DedocTableExtractor {
     private String outArg;
     private File outputFile;
     private Path outputPath;
+
+    @Option(name = "-s", aliases = {"--save"}, metaVar = "PATH", usage = "path for save result")
+    private String saveJsonArg = null;
+    private File saveJsonFile;
+
 
     @Option(name = "-sp", aliases = {"--start"}, usage = "specify a start page")
     private String sPage;
@@ -188,6 +195,12 @@ public class DedocTableExtractor {
         JsonDocumentWriter writer = new JsonDocumentWriter(document);
         if (isWordDocumentWriter) {
             writer = new JsonWordDocumentWriter(document);
+        }
+        if (null != saveJsonArg) {
+            try (PrintWriter out = new PrintWriter(saveJsonArg)) {
+                out.println(writer.write());
+            }
+            return;
         }
         System.out.println(writer.write());
     }

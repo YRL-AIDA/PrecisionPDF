@@ -249,7 +249,7 @@ public class BlockComposer {
         String text = from.getText();
         Page page = from.getPage();
 
-        PDFFont font = from.getFont();
+        PDFFont font = from.getFont().copyFont();
         Color color = from.getColor();
         float spaceWidth = from.getSpaceWidth();
         int startOrder = from.getStartOrder();

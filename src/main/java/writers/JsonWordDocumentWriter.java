@@ -44,15 +44,10 @@ public class JsonWordDocumentWriter extends JsonDocumentWriter{
             int height = (int)word.getHeight() < 0 ? 0: (int)word.getHeight();
             jsonWord.put("height", height);
             jsonWord.put("text", word.getText());
-            if (word.getFont().isBold()){
-                jsonWord.put("type", "bold");
-            }else{
-                if (word.getFont().isItalic()){
-                    jsonWord.put("type", "bold");
-                }else{
-                    jsonWord.put("type", "normal");
-                }
-            }
+            jsonWord.put("italic", word.getFont().isItalic());
+            jsonWord.put("normal", word.getFont().isNormal());
+            jsonWord.put("bold", word.getFont().isBold());
+            jsonWord.put("font_type", word.getFont().getName());
             jsonWord.put("font_size", word.getFont().getFontSize());
             jsonWords.put(jsonWord);
 
